@@ -5,5 +5,9 @@ authors = ["Thom Wiggers <thom@thomwiggers.nl>"]
 description = "M4RI bindings to Rust"
 repository = "https://github.com/thomwiggers/m4ri-rust"
 
+[badges]
+travis-ci = { repository = "thomwiggers/m4ri-rust" }
+maintenance = { status = "experimental" }
+
 [dependencies]
 libc = "^0.2"
