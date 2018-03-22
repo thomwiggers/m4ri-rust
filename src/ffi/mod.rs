@@ -1,3 +1,4 @@
+/// Implements the FFI to M4RI
 mod mzd;
 mod mzp;
 mod strassen;

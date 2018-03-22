@@ -1,3 +1,6 @@
+/// Corresponds to the mzp.h file.
+///
+/// Some functions are missing
 use libc;
 
 use ffi::mzd::Mzd;
@@ -20,7 +23,7 @@ extern "C" {
     /// Create a window into the permutation
     ///
     /// Use mzp_free_window to free the window
-    pub fn Mzp_init_window(p: *mut Mzp, begin: Rci, end: Rci);
+    pub fn mzp_init_window(p: *mut Mzp, begin: Rci, end: Rci);
 
     /// Free a permutation window created with Mzp_init_window
     pub fn Mzp_free_window(condemned: *mut Mzp);
@@ -46,4 +49,6 @@ extern "C" {
 
     /// Print the mzp
     pub fn mzp_print(p: *const Mzp);
+
+// FIXME add missing components
 }

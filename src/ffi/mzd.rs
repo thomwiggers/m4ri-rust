@@ -1,4 +1,6 @@
 /// Links to mzd.h
+///
+/// FIXME implement missing functions
 use libc;
 
 /// Represents the Mzd data type used by M4RI
