@@ -1,12 +1,14 @@
+/// Links to mzd.h
 use libc;
 
+/// Represents the Mzd data type used by M4RI
 #[repr(C)]
 pub struct Mzd {
     private: [u8; 0],
 }
 
-type Rci = libc::c_int;
-type BIT = libc::c_int;
+pub type Rci = libc::c_int;
+pub type BIT = libc::c_int;
 
 #[link(name = "m4ri")]
 extern "C" {
