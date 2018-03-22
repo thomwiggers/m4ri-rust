@@ -1,0 +1,7 @@
+[package]
+name = "m4ri-rust"
+version = "0.1.0"
+authors = ["Thom Wiggers <thom@thomwiggers.nl>"]
+
+[dependencies]
+libc = "^0.2"
