@@ -2,6 +2,8 @@
 name = "m4ri-rust"
 version = "0.1.0"
 authors = ["Thom Wiggers <thom@thomwiggers.nl>"]
+description = "M4RI bindings to Rust"
+repository = "https://github.com/thomwiggers/m4ri-rust"
 
 [dependencies]
 libc = "^0.2"
