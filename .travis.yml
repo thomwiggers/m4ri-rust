@@ -4,6 +4,11 @@ rust:
   - beta
   - nightly
 
+addons:
+  apt:
+    packages:
+      - libm4ri-dev
+
 before_script:
   - rustup component add rustfmt-preview
 
@@ -13,3 +18,5 @@ script:
   - cargo test --all
 
 cache: cargo
+
+#  vim: set ts=2 sw=2 tw=0 et :
