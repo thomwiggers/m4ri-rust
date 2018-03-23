@@ -11,6 +11,7 @@ pub struct Mzp {
     private: [u8; 0],
 }
 
+#[link(name = "m4ri")]
 extern "C" {
     /// Construct an identity permutation
     ///
