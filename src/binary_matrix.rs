@@ -1,6 +1,7 @@
 use bit_vec::BitVec;
 use ffi::*;
 use libc::c_int;
+use std::ops;
 use std::ptr;
 
 pub struct BinMatrix {
@@ -55,13 +56,6 @@ impl BinMatrix {
         }
     }
 
-    pub fn transpose_in_place(&mut self) {
-        let mzd = self.mzd.as_ptr();
-        unsafe {
-            mzd_transpose(mzd, mzd);
-        }
-    }
-
     pub fn transpose(&self) -> BinMatrix {
         let mzd;
         unsafe {
@@ -77,6 +71,27 @@ impl BinMatrix {
 
     pub fn ncols(&self) -> usize {
         unsafe { self.mzd.as_ref().ncols as usize }
+    }
+}
+
+impl ops::Mul<BinMatrix> for BinMatrix {
+    type Output = BinMatrix;
+
+    fn mul(self, other: BinMatrix) -> Self::Output {
+        &self * &other
+    }
+}
+
+impl<'a> ops::Mul<&'a BinMatrix> for &'a BinMatrix {
+    type Output = BinMatrix;
+    fn mul(self, other: &BinMatrix) -> Self::Output {
+        unsafe {
+            let mzd_ptr = mzd_mul(ptr::null_mut(), self.mzd.as_ptr(), other.mzd.as_ptr(), 0);
+
+            BinMatrix {
+                mzd: ptr::NonNull::new(mzd_ptr).expect("Multiplication failed"),
+            }
+        }
     }
 }
 
@@ -114,12 +129,29 @@ mod test {
                 let m1 = id.mzd.as_ptr();
                 let m2 = id_gen.mzd.as_ptr();
                 unsafe {
-                    assert_eq!(mzd_read_bit(m1, i, j), mzd_read_bit(m2, i, j), "({}, {})", i, j);
+                    assert_eq!(
+                        mzd_read_bit(m1, i, j),
+                        mzd_read_bit(m2, i, j),
+                        "({}, {})",
+                        i,
+                        j
+                    );
                 }
             }
         }
         unsafe {
             assert!(mzd_equal(id.mzd.as_ptr(), id_gen.mzd.as_ptr()) != 0);
+        }
+    }
+
+    #[test]
+    fn mul() {
+        let m1 = BinMatrix::identity(8);
+        let m2 = BinMatrix::identity(8);
+        let m3 = BinMatrix::identity(8);
+        let prod = m1 * m2;
+        unsafe {
+            assert!(mzd_equal(prod.mzd.as_ptr(), m3.mzd.as_ptr()) != 0);
         }
     }
 
