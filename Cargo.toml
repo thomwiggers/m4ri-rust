@@ -12,3 +12,4 @@ maintenance = { status = "experimental" }
 
 [dependencies]
 libc = "^0.2"
+bit-vec = "^0.4.4"

@@ -1,10 +1,8 @@
-/// See `brilliantrussian.h`
-
-use libc;
+use ffi::misc::Rci;
 use ffi::mzd::Mzd;
-use ffi::mzd::Rci;
+/// See `brilliantrussian.h`
+use libc;
 
-#[link(name = "m4ri")]
 extern "C" {
 
     /// Constructs all possible 2^k row combinations using the

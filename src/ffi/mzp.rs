@@ -3,15 +3,14 @@
 /// Some functions are missing
 use libc;
 
+use ffi::misc::Rci;
 use ffi::mzd::Mzd;
-use ffi::mzd::Rci;
 
 #[repr(C)]
 pub struct Mzp {
     private: [u8; 0],
 }
 
-#[link(name = "m4ri")]
 extern "C" {
     /// Construct an identity permutation
     ///

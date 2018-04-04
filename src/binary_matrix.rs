@@ -1,0 +1,128 @@
+use bit_vec::BitVec;
+use ffi::*;
+use libc::c_int;
+use std::ptr;
+
+pub struct BinMatrix {
+    mzd: ptr::NonNull<Mzd>,
+}
+
+impl BinMatrix {
+    pub fn new(rows: Vec<BitVec>) -> BinMatrix {
+        if rows.len() == 0 {
+            panic!("Can't create a 0 matrix");
+        }
+        let first_col_length = rows[0].len();
+        if cfg!(not(ndebug)) {
+            for row in rows.iter() {
+                debug_assert_eq!(first_col_length, row.len());
+            }
+        }
+        let mzd_ptr;
+        unsafe {
+            mzd_ptr = mzd_init(rows.len() as c_int, rows[0].len() as c_int);
+        }
+
+        // can we do this faster?
+        // Yes we can, but it's a bit scary.
+        // FIXME
+        for (row_index, row) in rows.into_iter().enumerate() {
+            for (column_index, bit) in row.into_iter().enumerate() {
+                unsafe {
+                    mzd_write_bit(
+                        mzd_ptr,
+                        row_index as c_int,
+                        column_index as c_int,
+                        bit as BIT,
+                    );
+                }
+            }
+        }
+
+        let mzd;
+        unsafe {
+            mzd = ptr::NonNull::new_unchecked(mzd_ptr);
+        }
+        BinMatrix { mzd }
+    }
+
+    pub fn identity(rows: usize) -> BinMatrix {
+        unsafe {
+            let mzd_ptr = mzd_init(rows as c_int, rows as c_int);
+            mzd_set_ui(mzd_ptr, 1);
+            let mzd = ptr::NonNull::new_unchecked(mzd_ptr);
+            BinMatrix { mzd }
+        }
+    }
+
+    pub fn transpose_in_place(&mut self) {
+        let mzd = self.mzd.as_ptr();
+        unsafe {
+            mzd_transpose(mzd, mzd);
+        }
+    }
+
+    pub fn transpose(&self) -> BinMatrix {
+        let mzd;
+        unsafe {
+            let mzd_ptr = mzd_transpose(ptr::null_mut(), self.mzd.as_ptr());
+            mzd = ptr::NonNull::new_unchecked(mzd_ptr);
+        }
+        BinMatrix { mzd }
+    }
+
+    pub fn nrows(&self) -> usize {
+        unsafe { self.mzd.as_ref().nrows as usize }
+    }
+
+    pub fn ncols(&self) -> usize {
+        unsafe { self.mzd.as_ref().ncols as usize }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use bit_vec::BitVec;
+
+    #[test]
+    fn new() {
+        let _m = BinMatrix::new(vec![
+            BitVec::from_bytes(&[0b01010101]),
+            BitVec::from_bytes(&[0b01010101]),
+        ]);
+    }
+
+    #[test]
+    fn identity() {
+        let id = BinMatrix::new(vec![
+            BitVec::from_bytes(&[0b10000000]),
+            BitVec::from_bytes(&[0b01000000]),
+            BitVec::from_bytes(&[0b00100000]),
+            BitVec::from_bytes(&[0b00010000]),
+            BitVec::from_bytes(&[0b00001000]),
+            BitVec::from_bytes(&[0b00000100]),
+            BitVec::from_bytes(&[0b00000010]),
+            BitVec::from_bytes(&[0b00000001]),
+        ]);
+
+        let id_gen = BinMatrix::identity(8);
+        assert_eq!(id.nrows(), id_gen.nrows());
+        assert_eq!(id.ncols(), id_gen.ncols());
+        for i in 0..8 {
+            for j in 0..8 {
+                let m1 = id.mzd.as_ptr();
+                let m2 = id_gen.mzd.as_ptr();
+                unsafe {
+                    print!("{} ", mzd_read_bit(m1, i, j));
+                    //assert_eq!(mzd_read_bit(m1, i, j), mzd_read_bit(m2, i, j), "({}, {})", i, j);
+                }
+            }
+            println!();
+        }
+        unsafe {
+            assert!(mzd_equal(id.mzd.as_ptr(), id_gen.mzd.as_ptr()) != 0);
+        }
+    }
+
+}

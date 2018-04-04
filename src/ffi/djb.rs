@@ -1,7 +1,6 @@
+use ffi::misc::Rci;
 /// Corresponds to djb.h
-
 use ffi::mzd::Mzd;
-use ffi::mzd::Rci;
 
 #[repr(C)]
 pub struct Djb {
@@ -16,7 +15,6 @@ pub enum Srctyp {
     SourceSource,
 }
 
-#[link(name = "m4ri")]
 extern "C" {
     /// Allocate a new DJB linear map
     ///

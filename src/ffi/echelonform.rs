@@ -1,10 +1,9 @@
 /// Links to `echelonform.h`
 use libc;
 
+use ffi::misc::Rci;
 use ffi::mzd::Mzd;
-use ffi::mzd::Rci;
 
-#[link(name = "m4ri")]
 extern "C" {
 
     /// (Reduced) row echelon form

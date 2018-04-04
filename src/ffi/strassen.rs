@@ -1,9 +1,7 @@
-/// Links to strassen.h
-
-use libc;
 use ffi::mzd::Mzd;
+/// Links to strassen.h
+use libc;
 
-#[link(name = "m4ri")]
 extern "C" {
 
     /// \brief Matrix multiplication via the Strassen-Winograd matrix

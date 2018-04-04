@@ -1,9 +1,7 @@
-/// Corresponds to `mp.h`
-
-use libc;
 use ffi::mzd::Mzd;
+/// Corresponds to `mp.h`
+use libc;
 
-#[link(name = "m4ri")]
 extern "C" {
     /// Matrix multiplication via the cubic multiplication algorithm on multiple cores
     ///

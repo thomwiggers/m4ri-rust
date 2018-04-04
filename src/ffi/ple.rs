@@ -1,11 +1,9 @@
-/// References `ple.h`
-
-use libc;
+use ffi::misc::Rci;
 use ffi::mzd::Mzd;
-use ffi::mzd::Rci;
 use ffi::mzp::Mzp;
+/// References `ple.h`
+use libc;
 
-#[link(name = "m4ri")]
 extern "C" {
 
     /// PLUQ matrix decomposition.

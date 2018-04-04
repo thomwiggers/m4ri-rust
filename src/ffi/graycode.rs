@@ -1,5 +1,4 @@
 /// Links to `graycode.h`
-
 use libc;
 
 #[repr(C)]
@@ -10,7 +9,6 @@ pub struct Code {
     inc: *mut libc::c_int,
 }
 
-#[link(name = "m4ri")]
 extern "C" {
 
     /// Returns the ith Gray code entry for a gray code of length 2^l
