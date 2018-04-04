@@ -20,6 +20,7 @@ fn main() {
 
         let status = Command::new("./configure")
             .arg("--enable-static")
+            .env("CFLAGS", "-O3 -fPIC")
             .current_dir("vendor/m4ri")
             .status()
             .expect("Failed to execute configure");
