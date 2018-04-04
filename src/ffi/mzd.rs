@@ -204,13 +204,12 @@ extern "C" {
 /// Write the bit to position M[row, col]
 #[inline]
 pub unsafe fn mzd_write_bit(matrix: *mut Mzd, row: Rci, col: Rci, value: BIT) {
-    println!("({}, {}) = {}", row, col, value);
     let therow: *const *mut Word = (*matrix).rows.offset(row as isize);
     let column: *mut Word = (*therow).offset((col / m4ri_radix) as isize);
     let pos = col % m4ri_radix;
-    let column_bitmasked: Word = *column & (m4ri_one << pos);
+    let column_bitmasked: Word = *column & !(m4ri_one << pos);
     let column_newbit: Word = (value as Word & m4ri_one) << pos;
-    debug_assert!(column_newbit.count_ones() <= 1);
+    debug_assert_eq!(column_newbit.count_ones(), value as u32);
     *column = column_bitmasked | column_newbit;
 }
 

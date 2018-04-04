@@ -114,11 +114,9 @@ mod test {
                 let m1 = id.mzd.as_ptr();
                 let m2 = id_gen.mzd.as_ptr();
                 unsafe {
-                    print!("{} ", mzd_read_bit(m1, i, j));
-                    //assert_eq!(mzd_read_bit(m1, i, j), mzd_read_bit(m2, i, j), "({}, {})", i, j);
+                    assert_eq!(mzd_read_bit(m1, i, j), mzd_read_bit(m2, i, j), "({}, {})", i, j);
                 }
             }
-            println!();
         }
         unsafe {
             assert!(mzd_equal(id.mzd.as_ptr(), id_gen.mzd.as_ptr()) != 0);
