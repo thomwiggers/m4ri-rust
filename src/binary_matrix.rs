@@ -99,7 +99,14 @@ impl<'a> ops::Mul<&'a BinMatrix> for &'a BinMatrix {
 impl<'a> ops::Mul<&'a BitVec> for &'a BinMatrix {
     type Output = BitVec;
     fn mul(self, other: &BitVec) -> Self::Output {
-        debug_assert_eq!(self.nrows(), other.len(), "Mismatched sizes");
+        debug_assert_eq!(
+            self.nrows(),
+            other.len(),
+            "Mismatched sizes: ({}x{}) * ({}x1)",
+            self.nrows(),
+            self.ncols(),
+            other.len()
+        );
         let vec_mzd;
         unsafe {
             vec_mzd = mzd_init(other.len() as Rci, 1);
@@ -117,9 +124,9 @@ impl<'a> ops::Mul<&'a BitVec> for &'a BinMatrix {
         unsafe {
             let result_mzd = mzd_mul(ptr::null_mut(), self.mzd.as_ptr(), vec_mzd, 0);
             for i in 0..other.len() {
-            debug_assert_eq!((*result_mzd).nrows as usize, other.len());
-            debug_assert_eq!((*result_mzd).ncols as usize, 1);
-            // FIXME can be done faster
+                debug_assert_eq!((*result_mzd).nrows as usize, other.len());
+                debug_assert_eq!((*result_mzd).ncols as usize, 1);
+                // FIXME can be done faster
                 result.push(mzd_read_bit(result_mzd, i as Rci, 0) != 0);
             }
         }
