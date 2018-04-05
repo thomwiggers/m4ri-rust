@@ -147,6 +147,14 @@ extern "C" {
     /// C == C + AB
     pub fn mzd_addmul_naive(c: *mut Mzd, a: *const Mzd, b: *const Mzd) -> *mut Mzd;
 
+    /// Matrix multiplication optimized for v*A where v is a vector
+    ///
+    /// param C: preallocated product matrix
+    /// param v: input matrix v
+    /// param A: input matrix A
+    /// param clear: if set clear C first, otherwise add result to C
+    pub fn _mzd_mul_va(c: *mut Mzd, v: *const Mzd, a: *const Mzd, clear: libc::c_int) -> *mut Mzd;
+
     /// Fill the matrix m with uniformly distributed bits.
     pub fn mzd_randomize(m: *mut Mzd);
 

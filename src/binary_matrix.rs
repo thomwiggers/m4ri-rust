@@ -95,6 +95,38 @@ impl<'a> ops::Mul<&'a BinMatrix> for &'a BinMatrix {
     }
 }
 
+impl<'a> ops::Mul<&'a BitVec> for &'a BinMatrix {
+    type Output = BitVec;
+    fn mul(self, other: &BitVec) -> Self::Output {
+        let vec_mzd;
+        unsafe {
+            vec_mzd = mzd_init(1, other.len() as Rci);
+            debug_assert_eq!((*vec_mzd).ncols as usize, other.len());
+            debug_assert_eq!((*vec_mzd).nrows as usize, 1);
+        }
+        for (pos, bit) in other.iter().enumerate() {
+            unsafe {
+                // FIXME can be done faster
+                mzd_write_bit(vec_mzd, 0 as Rci, pos as Rci, bit as BIT);
+            }
+        }
+
+        let mut result = BitVec::with_capacity(other.len());
+        unsafe {
+            let new_matrix = mzd_init(1, other.len() as Rci);
+            let result_mzd = _mzd_mul_va(new_matrix, vec_mzd, self.mzd.as_ptr(), 1);
+            for i in 0..other.len() {
+            debug_assert_eq!((*result_mzd).ncols as usize, other.len());
+            debug_assert_eq!((*result_mzd).nrows as usize, 1);
+            // FIXME can be done faster
+                println!("reading bit");
+                result.push(mzd_read_bit(result_mzd, 0, i as Rci) != 0);
+            }
+        }
+        result
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -155,4 +187,13 @@ mod test {
         }
     }
 
+    #[test]
+    fn vecmul() {
+        let m1 = BinMatrix::identity(10);
+        let bitvec = BitVec::from_elem(10, true);
+
+        let result: BitVec = &m1 * &bitvec;
+
+        assert_eq!(result, bitvec);
+    }
 }
