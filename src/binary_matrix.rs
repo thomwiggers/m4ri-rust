@@ -119,7 +119,6 @@ impl<'a> ops::Mul<&'a BitVec> for &'a BinMatrix {
             debug_assert_eq!((*result_mzd).ncols as usize, other.len());
             debug_assert_eq!((*result_mzd).nrows as usize, 1);
             // FIXME can be done faster
-                println!("reading bit");
                 result.push(mzd_read_bit(result_mzd, 0, i as Rci) != 0);
             }
         }
