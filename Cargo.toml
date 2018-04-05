@@ -13,3 +13,6 @@ maintenance = { status = "experimental" }
 [dependencies]
 libc = "^0.2"
 bit-vec = "^0.4.4"
+
+[profile.release]
+lto = true
