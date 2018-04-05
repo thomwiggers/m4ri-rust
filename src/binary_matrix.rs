@@ -123,8 +123,8 @@ impl<'a> ops::Mul<&'a BitVec> for &'a BinMatrix {
         let mut result = BitVec::with_capacity(other.len());
         unsafe {
             let result_mzd = mzd_mul(ptr::null_mut(), self.mzd.as_ptr(), vec_mzd, 0);
-            debug_assert_eq!((*result_mzd).nrows as usize, other.len(), "result is {}x{}", (*result_mzd).nrows, (*result_mzd).ncols);
-            debug_assert_eq!((*result_mzd).ncols as usize, 1);
+            debug_assert_eq!((*result_mzd).ncols as usize, 1, "result is {}x{}", (*result_mzd).nrows, (*result_mzd).ncols);
+            debug_assert_eq!((*result_mzd).nrows as usize, self.nrows());
             for i in 0..other.len() {
                 // FIXME can be done faster
                 result.push(mzd_read_bit(result_mzd, i as Rci, 0) != 0);
