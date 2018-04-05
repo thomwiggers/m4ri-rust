@@ -4,11 +4,13 @@ use libc::c_int;
 use std::ops;
 use std::ptr;
 
+/// Structure to represent matrices
 pub struct BinMatrix {
     mzd: ptr::NonNull<Mzd>,
 }
 
 impl BinMatrix {
+    /// Create a new matrix
     pub fn new(rows: Vec<BitVec>) -> BinMatrix {
         if rows.len() == 0 {
             panic!("Can't create a 0 matrix");
@@ -47,6 +49,7 @@ impl BinMatrix {
         BinMatrix { mzd }
     }
 
+    /// Get an identity matrix
     pub fn identity(rows: usize) -> BinMatrix {
         unsafe {
             let mzd_ptr = mzd_init(rows as c_int, rows as c_int);
@@ -56,6 +59,7 @@ impl BinMatrix {
         }
     }
 
+    /// Compute the transpose of the matrix
     pub fn transpose(&self) -> BinMatrix {
         let mzd;
         unsafe {
@@ -65,10 +69,16 @@ impl BinMatrix {
         BinMatrix { mzd }
     }
 
+    /// Get the number of rows
+    ///
+    /// O(1)
     pub fn nrows(&self) -> usize {
         unsafe { self.mzd.as_ref().nrows as usize }
     }
 
+    /// Get the number of columns
+    ///
+    /// O(1)
     pub fn ncols(&self) -> usize {
         unsafe { self.mzd.as_ref().ncols as usize }
     }
@@ -77,6 +87,7 @@ impl BinMatrix {
 impl ops::Mul<BinMatrix> for BinMatrix {
     type Output = BinMatrix;
 
+    /// Computes the product of two matrices
     fn mul(self, other: BinMatrix) -> Self::Output {
         &self * &other
     }
@@ -84,6 +95,7 @@ impl ops::Mul<BinMatrix> for BinMatrix {
 
 impl<'a> ops::Mul<&'a BinMatrix> for &'a BinMatrix {
     type Output = BinMatrix;
+    /// Computes the product of two matrices
     fn mul(self, other: &BinMatrix) -> Self::Output {
         unsafe {
             let mzd_ptr = mzd_mul(ptr::null_mut(), self.mzd.as_ptr(), other.mzd.as_ptr(), 0);
@@ -95,9 +107,9 @@ impl<'a> ops::Mul<&'a BinMatrix> for &'a BinMatrix {
     }
 }
 
-/// Computes (v^T * A^T) (so the other way around!)
 impl<'a> ops::Mul<&'a BitVec> for &'a BinMatrix {
     type Output = BitVec;
+    /// Computes (A * v^T)
     fn mul(self, other: &BitVec) -> Self::Output {
         debug_assert_eq!(
             self.ncols(),
