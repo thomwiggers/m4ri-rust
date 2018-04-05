@@ -95,31 +95,32 @@ impl<'a> ops::Mul<&'a BinMatrix> for &'a BinMatrix {
     }
 }
 
+/// Computes (v^T * A^T) (so the other way around!)
 impl<'a> ops::Mul<&'a BitVec> for &'a BinMatrix {
     type Output = BitVec;
     fn mul(self, other: &BitVec) -> Self::Output {
+        debug_assert_eq!(self.nrows(), other.len(), "Mismatched sizes");
         let vec_mzd;
         unsafe {
-            vec_mzd = mzd_init(1, other.len() as Rci);
-            debug_assert_eq!((*vec_mzd).ncols as usize, other.len());
-            debug_assert_eq!((*vec_mzd).nrows as usize, 1);
+            vec_mzd = mzd_init(other.len() as Rci, 1);
+            debug_assert_eq!((*vec_mzd).nrows as usize, other.len());
+            debug_assert_eq!((*vec_mzd).ncols as usize, 1);
         }
         for (pos, bit) in other.iter().enumerate() {
             unsafe {
                 // FIXME can be done faster
-                mzd_write_bit(vec_mzd, 0 as Rci, pos as Rci, bit as BIT);
+                mzd_write_bit(vec_mzd, pos as Rci, 0, bit as BIT);
             }
         }
 
         let mut result = BitVec::with_capacity(other.len());
         unsafe {
-            let new_matrix = mzd_init(1, other.len() as Rci);
-            let result_mzd = _mzd_mul_va(new_matrix, vec_mzd, self.mzd.as_ptr(), 1);
+            let result_mzd = mzd_mul(ptr::null_mut(), self.mzd.as_ptr(), vec_mzd, 0);
             for i in 0..other.len() {
-            debug_assert_eq!((*result_mzd).ncols as usize, other.len());
-            debug_assert_eq!((*result_mzd).nrows as usize, 1);
+            debug_assert_eq!((*result_mzd).nrows as usize, other.len());
+            debug_assert_eq!((*result_mzd).ncols as usize, 1);
             // FIXME can be done faster
-                result.push(mzd_read_bit(result_mzd, 0, i as Rci) != 0);
+                result.push(mzd_read_bit(result_mzd, i as Rci, 0) != 0);
             }
         }
         result
