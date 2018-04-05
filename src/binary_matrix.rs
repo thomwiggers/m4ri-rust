@@ -100,7 +100,7 @@ impl<'a> ops::Mul<&'a BitVec> for &'a BinMatrix {
     type Output = BitVec;
     fn mul(self, other: &BitVec) -> Self::Output {
         debug_assert_eq!(
-            self.nrows(),
+            self.ncols(),
             other.len(),
             "Mismatched sizes: ({}x{}) * ({}x1)",
             self.nrows(),
