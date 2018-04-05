@@ -50,6 +50,7 @@ impl BinMatrix {
     }
 
     /// Get an identity matrix
+    #[inline]
     pub fn identity(rows: usize) -> BinMatrix {
         unsafe {
             let mzd_ptr = mzd_init(rows as c_int, rows as c_int);
@@ -60,6 +61,7 @@ impl BinMatrix {
     }
 
     /// Compute the transpose of the matrix
+    #[inline]
     pub fn transpose(&self) -> BinMatrix {
         let mzd;
         unsafe {
@@ -72,6 +74,7 @@ impl BinMatrix {
     /// Get the number of rows
     ///
     /// O(1)
+    #[inline]
     pub fn nrows(&self) -> usize {
         unsafe { self.mzd.as_ref().nrows as usize }
     }
@@ -79,6 +82,7 @@ impl BinMatrix {
     /// Get the number of columns
     ///
     /// O(1)
+    #[inline]
     pub fn ncols(&self) -> usize {
         unsafe { self.mzd.as_ref().ncols as usize }
     }
@@ -88,6 +92,7 @@ impl ops::Mul<BinMatrix> for BinMatrix {
     type Output = BinMatrix;
 
     /// Computes the product of two matrices
+    #[inline]
     fn mul(self, other: BinMatrix) -> Self::Output {
         &self * &other
     }
@@ -96,6 +101,7 @@ impl ops::Mul<BinMatrix> for BinMatrix {
 impl<'a> ops::Mul<&'a BinMatrix> for &'a BinMatrix {
     type Output = BinMatrix;
     /// Computes the product of two matrices
+    #[inline]
     fn mul(self, other: &BinMatrix) -> Self::Output {
         unsafe {
             let mzd_ptr = mzd_mul(ptr::null_mut(), self.mzd.as_ptr(), other.mzd.as_ptr(), 0);
@@ -110,6 +116,7 @@ impl<'a> ops::Mul<&'a BinMatrix> for &'a BinMatrix {
 impl<'a> ops::Mul<&'a BitVec> for &'a BinMatrix {
     type Output = BitVec;
     /// Computes (A * v^T)
+    #[inline]
     fn mul(self, other: &BitVec) -> Self::Output {
         debug_assert_eq!(
             self.ncols(),
@@ -143,6 +150,14 @@ impl<'a> ops::Mul<&'a BitVec> for &'a BinMatrix {
             }
         }
         result
+    }
+}
+
+impl ops::Mul<BitVec> for BinMatrix {
+    type Output = BitVec;
+    /// Computes (A * v^T)
+    fn mul(self, other: BitVec) -> Self::Output {
+        &self * &other
     }
 }
 
