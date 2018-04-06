@@ -22,6 +22,10 @@ impl BinVector {
     pub fn from(vec: BitVec) -> Self {
         BinVector { vec }
     }
+
+    pub fn count_ones(&self) -> u32 {
+        self.storage().iter().fold(0u32, |acc, block| acc + block.count_ones())
+    }
 }
 
 impl iter::IntoIterator for BinVector {
@@ -99,25 +103,57 @@ impl ops::Add<BinVector> for BinVector {
     }
 }
 
+impl<'a> ops::AddAssign<&'a BinVector> for BinVector {
+    fn add_assign(&mut self, other: &BinVector) {
+        let storage;
+        unsafe {
+            storage = (&mut self.vec).storage_mut();
+        }
+        for (mut a, b) in storage.iter_mut().zip(other.storage().iter()) {
+            *a ^= b;
+        }
+    }
+}
+
+impl ops::AddAssign<BinVector> for BinVector {
+    fn add_assign(&mut self, other: BinVector) {
+        let storage;
+        unsafe {
+            storage = (&mut self.vec).storage_mut();
+        }
+        for (mut a, b) in storage.iter_mut().zip(other.storage().into_iter()) {
+            *a ^= b;
+        }
+    }
+}
+
 impl<'a> ops::Mul<&'a BinVector> for &'a BinVector {
-    type Output = BinVector;
+    type Output = bool;
 
     #[inline]
     fn mul(self, other: &BinVector) -> Self::Output {
         let mut vec = self.clone();
         (&mut vec.vec).intersect(&other);
-        vec
+        if vec.count_ones() % 2 == 1 {
+            true
+        } else {
+            false
+        }
     }
 }
 
 impl ops::Mul<BinVector> for BinVector {
-    type Output = BinVector;
+    type Output = bool;
 
     #[inline]
     fn mul(self, other: BinVector) -> Self::Output {
         let mut vec = self.clone();
         (&mut vec.vec).intersect(&other);
-        vec
+        if vec.count_ones() % 2 == 1 {
+            true
+        } else {
+            false
+        }
     }
 }
 
