@@ -1,8 +1,8 @@
 [package]
 name = "m4ri-rust"
-version = "0.0.6"
+version = "0.0.7"
 authors = ["Thom Wiggers <thom@thomwiggers.nl>"]
-description = "M4RI bindings to Rust. Work in progress."
+description = "M4RI-based boolean linear algebra"
 repository = "https://github.com/thomwiggers/m4ri-rust"
 license = "GPL-2.0+"
 
@@ -12,7 +12,7 @@ maintenance = { status = "experimental" }
 
 [dependencies]
 libc = "^0.2"
-bit-vec = "^0.4.4"
+vob  = "^1.1.0"
 
 [profile.release]
 lto = true

@@ -1,4 +1,4 @@
-use bit_vec::BitVec;
+use vob::Vob;
 use ffi::*;
 use libc::c_int;
 use std::ops;
@@ -140,7 +140,7 @@ impl<'a> ops::Mul<&'a BinVector> for &'a BinMatrix {
             }
         }
 
-        let mut result = BitVec::with_capacity(other.len());
+        let mut result = Vob::with_capacity(other.len());
         unsafe {
             let result_mzd = mzd_mul(ptr::null_mut(), self.mzd.as_ptr(), vec_mzd, 0);
             debug_assert_eq!((*result_mzd).ncols as usize, 1, "result is {}x{}", (*result_mzd).nrows, (*result_mzd).ncols);
@@ -165,30 +165,32 @@ impl ops::Mul<BinVector> for BinMatrix {
 #[cfg(test)]
 mod test {
     use super::*;
-    use bit_vec::BitVec;
+    use vob::Vob;
 
     #[test]
     fn new() {
         let _m = BinMatrix::new(vec![
-            BinVector::from(BitVec::from_bytes(&[0b01010101])),
-            BinVector::from(BitVec::from_bytes(&[0b01010101])),
+            BinVector::from(vob![true, false, true]),
+            BinVector::from(vob![true, true, true]),
         ]);
     }
 
     #[test]
     fn identity() {
         let id = BinMatrix::new(vec![
-            BinVector::from(BitVec::from_bytes(&[0b10000000])),
-            BinVector::from(BitVec::from_bytes(&[0b01000000])),
-            BinVector::from(BitVec::from_bytes(&[0b00100000])),
-            BinVector::from(BitVec::from_bytes(&[0b00010000])),
-            BinVector::from(BitVec::from_bytes(&[0b00001000])),
-            BinVector::from(BitVec::from_bytes(&[0b00000100])),
-            BinVector::from(BitVec::from_bytes(&[0b00000010])),
-            BinVector::from(BitVec::from_bytes(&[0b00000001])),
+            BinVector::from(vob![true, false, false, false, false, false, false, false, false, false]),
+            BinVector::from(vob![false, true, false, false, false, false, false, false, false, false]),
+            BinVector::from(vob![false, false, true, false, false, false, false, false, false, false]),
+            BinVector::from(vob![false, false, false, true, false, false, false, false, false, false]),
+            BinVector::from(vob![false, false, false, false, true, false, false, false, false, false]),
+            BinVector::from(vob![false, false, false, false, false, true, false, false, false, false]),
+            BinVector::from(vob![false, false, false, false, false, false, true, false, false, false]),
+            BinVector::from(vob![false, false, false, false, false, false, false, true, false, false]),
+            BinVector::from(vob![false, false, false, false, false, false, false, false, true, false]),
+            BinVector::from(vob![false, false, false, false, false, false, false, false, false, true]),
         ]);
 
-        let id_gen = BinMatrix::identity(8);
+        let id_gen = BinMatrix::identity(10);
         assert_eq!(id.nrows(), id_gen.nrows());
         assert_eq!(id.ncols(), id_gen.ncols());
         for i in 0..8 {
@@ -225,10 +227,10 @@ mod test {
     #[test]
     fn vecmul() {
         let m1 = BinMatrix::identity(10);
-        let bitvec = BinVector::from(BitVec::from_elem(10, true));
+        let binvec = BinVector::from(Vob::from_elem(10, true));
 
-        let result: BinVector = &m1 * &bitvec;
+        let result: BinVector = &m1 * &binvec;
 
-        assert_eq!(result, bitvec);
+        assert_eq!(result, binvec);
     }
 }
