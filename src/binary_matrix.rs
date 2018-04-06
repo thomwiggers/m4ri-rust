@@ -3,6 +3,7 @@ use ffi::*;
 use libc::c_int;
 use std::ops;
 use std::ptr;
+use binary_vector::BinVector;
 
 /// Structure to represent matrices
 pub struct BinMatrix {
@@ -11,7 +12,7 @@ pub struct BinMatrix {
 
 impl BinMatrix {
     /// Create a new matrix
-    pub fn new(rows: Vec<BitVec>) -> BinMatrix {
+    pub fn new(rows: Vec<BinVector>) -> BinMatrix {
         if rows.len() == 0 {
             panic!("Can't create a 0 matrix");
         }
@@ -113,11 +114,11 @@ impl<'a> ops::Mul<&'a BinMatrix> for &'a BinMatrix {
     }
 }
 
-impl<'a> ops::Mul<&'a BitVec> for &'a BinMatrix {
-    type Output = BitVec;
+impl<'a> ops::Mul<&'a BinVector> for &'a BinMatrix {
+    type Output = BinVector;
     /// Computes (A * v^T)
     #[inline]
-    fn mul(self, other: &BitVec) -> Self::Output {
+    fn mul(self, other: &BinVector) -> Self::Output {
         debug_assert_eq!(
             self.ncols(),
             other.len(),
@@ -149,14 +150,14 @@ impl<'a> ops::Mul<&'a BitVec> for &'a BinMatrix {
                 result.push(mzd_read_bit(result_mzd, i as Rci, 0) != 0);
             }
         }
-        result
+        BinVector::from(result)
     }
 }
 
-impl ops::Mul<BitVec> for BinMatrix {
-    type Output = BitVec;
+impl ops::Mul<BinVector> for BinMatrix {
+    type Output = BinVector;
     /// Computes (A * v^T)
-    fn mul(self, other: BitVec) -> Self::Output {
+    fn mul(self, other: BinVector) -> Self::Output {
         &self * &other
     }
 }
@@ -169,22 +170,22 @@ mod test {
     #[test]
     fn new() {
         let _m = BinMatrix::new(vec![
-            BitVec::from_bytes(&[0b01010101]),
-            BitVec::from_bytes(&[0b01010101]),
+            BinVector::from(BitVec::from_bytes(&[0b01010101])),
+            BinVector::from(BitVec::from_bytes(&[0b01010101])),
         ]);
     }
 
     #[test]
     fn identity() {
         let id = BinMatrix::new(vec![
-            BitVec::from_bytes(&[0b10000000]),
-            BitVec::from_bytes(&[0b01000000]),
-            BitVec::from_bytes(&[0b00100000]),
-            BitVec::from_bytes(&[0b00010000]),
-            BitVec::from_bytes(&[0b00001000]),
-            BitVec::from_bytes(&[0b00000100]),
-            BitVec::from_bytes(&[0b00000010]),
-            BitVec::from_bytes(&[0b00000001]),
+            BinVector::from(BitVec::from_bytes(&[0b10000000])),
+            BinVector::from(BitVec::from_bytes(&[0b01000000])),
+            BinVector::from(BitVec::from_bytes(&[0b00100000])),
+            BinVector::from(BitVec::from_bytes(&[0b00010000])),
+            BinVector::from(BitVec::from_bytes(&[0b00001000])),
+            BinVector::from(BitVec::from_bytes(&[0b00000100])),
+            BinVector::from(BitVec::from_bytes(&[0b00000010])),
+            BinVector::from(BitVec::from_bytes(&[0b00000001])),
         ]);
 
         let id_gen = BinMatrix::identity(8);
@@ -224,9 +225,9 @@ mod test {
     #[test]
     fn vecmul() {
         let m1 = BinMatrix::identity(10);
-        let bitvec = BitVec::from_elem(10, true);
+        let bitvec = BinVector::from(BitVec::from_elem(10, true));
 
-        let result: BitVec = &m1 * &bitvec;
+        let result: BinVector = &m1 * &bitvec;
 
         assert_eq!(result, bitvec);
     }

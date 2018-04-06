@@ -1,6 +1,6 @@
 [package]
 name = "m4ri-rust"
-version = "0.0.5"
+version = "0.0.6"
 authors = ["Thom Wiggers <thom@thomwiggers.nl>"]
 description = "M4RI bindings to Rust. Work in progress."
 repository = "https://github.com/thomwiggers/m4ri-rust"
