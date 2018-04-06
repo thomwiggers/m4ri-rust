@@ -18,6 +18,12 @@ impl ops::Deref for BinVector {
     }
 }
 
+impl ops::DerefMut for BinVector {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.vec
+    }
+}
+
 impl BinVector {
     pub fn from(vec: BitVec) -> Self {
         BinVector { vec }
@@ -29,14 +35,6 @@ impl BinVector {
 
     pub fn to_bitvec(self) -> BitVec {
         self.vec
-    }
-
-    pub fn reserve_exact(&mut self, length: usize) {
-        self.vec.reserve_exact(length)
-    }
-
-    pub fn truncate(&mut self, length: usize) {
-        self.vec.truncate(length)
     }
 }
 
@@ -203,8 +201,7 @@ mod test {
 
         let c = &a * &b;
 
-        assert_eq!(c.len(), 10, "length incorrect");
-        assert_eq!(BitVec::from_elem(10, false), *c);
+        assert_eq!(false, c);
         assert_eq!(c, a * b);
     }
 }
