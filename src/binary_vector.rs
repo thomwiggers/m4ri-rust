@@ -26,6 +26,10 @@ impl BinVector {
     pub fn count_ones(&self) -> u32 {
         self.storage().iter().fold(0u32, |acc, block| acc + block.count_ones())
     }
+
+    pub fn to_bitvec(self) -> BitVec {
+        self.vec
+    }
 }
 
 impl iter::IntoIterator for BinVector {
@@ -72,6 +76,7 @@ impl<'a> ops::Add<&'a BinVector> for &'a BinVector {
 
 impl ops::Add<BinVector> for BinVector {
     type Output = BinVector;
+
     #[inline]
     fn add(self, other: BinVector) -> Self::Output {
         assert_eq!(self.len(), other.len(), "unequal length vectors");
@@ -104,6 +109,7 @@ impl ops::Add<BinVector> for BinVector {
 }
 
 impl<'a> ops::AddAssign<&'a BinVector> for BinVector {
+    #[inline]
     fn add_assign(&mut self, other: &BinVector) {
         let storage;
         unsafe {
@@ -116,6 +122,7 @@ impl<'a> ops::AddAssign<&'a BinVector> for BinVector {
 }
 
 impl ops::AddAssign<BinVector> for BinVector {
+    #[inline]
     fn add_assign(&mut self, other: BinVector) {
         let storage;
         unsafe {
