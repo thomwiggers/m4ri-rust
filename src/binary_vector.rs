@@ -30,6 +30,14 @@ impl BinVector {
     pub fn to_bitvec(self) -> BitVec {
         self.vec
     }
+
+    pub fn reserve_exact(&mut self, length: usize) {
+        self.vec.reserve_exact(length)
+    }
+
+    pub fn truncate(&mut self, length: usize) {
+        self.vec.truncate(length)
+    }
 }
 
 impl iter::IntoIterator for BinVector {
