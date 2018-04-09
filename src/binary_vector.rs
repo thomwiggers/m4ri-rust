@@ -28,6 +28,19 @@ impl BinVector {
         BinVector { vec }
     }
 
+    /// Create a new BinVector from an `&[u8]`.
+    pub fn from_bytes(bytes: &[u8]) -> BinVector  {
+        let mut vec = Vob::with_capacity(bytes.len());
+        // TODO Speed this up
+        for byte in bytes {
+            for i in (0..7).rev() {
+                vec.push(byte >> i & 1u8 == 1u8);
+            }
+        }
+
+        BinVector { vec }
+    }
+
     pub fn count_ones(&self) -> u32 {
         self.iter_storage().fold(0u32, |acc, block| acc + block.count_ones())
     }
