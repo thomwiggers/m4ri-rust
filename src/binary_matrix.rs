@@ -2,6 +2,7 @@ use vob::Vob;
 use ffi::*;
 use libc::c_int;
 use std::ops;
+use std::clone;
 use std::ptr;
 use binary_vector::BinVector;
 
@@ -61,6 +62,25 @@ impl BinMatrix {
         }
     }
 
+    /// Get the rank of the matrix
+    ///
+    /// Does an echelonization and throws it away!
+    #[inline]
+    pub fn rank(&self) -> usize {
+        self.clone().echelonized()
+    }
+
+    /// Echelonize this matrix in-place
+    ///
+    /// Return: the rank of the matrix
+    #[inline]
+    pub fn echelonized(&mut self) -> usize  {
+        let rank = unsafe {
+            mzd_echelonize(self.mzd.as_ptr(), false as c_int)
+        };
+        rank as usize
+    }
+
     /// Compute the transpose of the matrix
     #[inline]
     pub fn transpose(&self) -> BinMatrix {
@@ -96,6 +116,15 @@ impl ops::Mul<BinMatrix> for BinMatrix {
     #[inline]
     fn mul(self, other: BinMatrix) -> Self::Output {
         &self * &other
+    }
+}
+
+impl clone::Clone for BinMatrix {
+    fn clone(&self) -> Self {
+        let mzd = unsafe {
+            ptr::NonNull::new_unchecked(mzd_copy(ptr::null_mut(), self.mzd.as_ptr()))
+        };
+        BinMatrix { mzd }
     }
 }
 
