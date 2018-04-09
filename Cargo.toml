@@ -1,6 +1,6 @@
 [package]
 name = "m4ri-rust"
-version = "0.0.7"
+version = "0.0.8"
 authors = ["Thom Wiggers <thom@thomwiggers.nl>"]
 description = "M4RI-based boolean linear algebra"
 repository = "https://github.com/thomwiggers/m4ri-rust"
