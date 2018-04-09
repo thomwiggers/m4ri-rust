@@ -4,6 +4,7 @@
 use std::ops;
 use vob::Vob;
 
+
 /// Wrapper around BitVec
 #[derive(Clone, Debug, PartialEq)]
 pub struct BinVector {

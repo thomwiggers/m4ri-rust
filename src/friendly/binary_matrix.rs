@@ -135,7 +135,7 @@ impl ops::Mul<BinMatrix> for BinMatrix {
 impl clone::Clone for BinMatrix {
     fn clone(&self) -> Self {
         let mzd = unsafe {
-            ptr::NonNull::new_unchecked(mzd_copy(ptr::null_mut(), self.mzd.as_ptr()))
+            nonnull!(mzd_copy(ptr::null_mut(), self.mzd.as_ptr()))
         };
         BinMatrix { mzd }
     }
@@ -169,12 +169,14 @@ impl<'a> ops::Mul<&'a BinVector> for &'a BinMatrix {
             self.ncols(),
             other.len()
         );
-        let vec_mzd;
-        unsafe {
-            vec_mzd = mzd_init(other.len() as Rci, 1);
+
+        let vec_mzd = unsafe {
+            let vec_mzd = mzd_init(other.len() as Rci, 1);
             debug_assert_eq!((*vec_mzd).nrows as usize, other.len());
             debug_assert_eq!((*vec_mzd).ncols as usize, 1);
-        }
+            vec_mzd
+        };
+
         for (pos, bit) in other.iter().enumerate() {
             unsafe {
                 // FIXME can maybe be done faster
@@ -201,6 +203,54 @@ impl ops::Mul<BinVector> for BinMatrix {
     type Output = BinVector;
     /// Computes (A * v^T)
     fn mul(self, other: BinVector) -> Self::Output {
+        &self * &other
+    }
+}
+
+impl<'a> ops::Mul<&'a BinMatrix> for &'a BinVector {
+    type Output = BinVector;
+
+    #[inline]
+    /// computes v^T * A
+    fn mul(self, other: &BinMatrix) -> Self::Output {
+        let vec_mzd = unsafe {
+            mzd_init(1, self.len() as Rci)
+        };
+
+        unsafe {
+            debug_assert_eq!((*vec_mzd).ncols as usize, self.len());
+            debug_assert_eq!((*vec_mzd).nrows as usize, 1);
+        }
+
+        for (pos, bit) in self.iter().enumerate() {
+            unsafe {
+                // FIXME can maybe be done faster
+                // not sure, because we're writing as a column.
+                mzd_write_bit(vec_mzd, 0, pos as Rci, bit as BIT);
+            }
+        }
+
+        let tmp = unsafe {
+            mzd_init(1, self.len() as Rci)
+        };
+
+        let mzd = unsafe {
+            _mzd_mul_va(tmp, vec_mzd, other.mzd.as_ptr(), 1)
+        };
+
+        // FIXME can this be done faster.
+        let resultvob = (0..self.len()).map(|i| unsafe { mzd_read_bit(mzd, 0, i as Rci) == 1 }).collect::<Vob>();
+
+        BinVector::from(resultvob)
+    }
+}
+
+impl ops::Mul<BinMatrix> for BinVector {
+    type Output = BinVector;
+
+    #[inline]
+    /// computes v^T * A
+    fn mul(self, other: BinMatrix) -> Self::Output {
         &self * &other
     }
 }
@@ -273,7 +323,9 @@ mod test {
         let binvec = BinVector::from(Vob::from_elem(10, true));
 
         let result: BinVector = &m1 * &binvec;
+        assert_eq!(result, binvec);
 
+        let result: BinVector = &binvec * &m1;
         assert_eq!(result, binvec);
     }
 }
