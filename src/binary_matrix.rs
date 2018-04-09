@@ -11,6 +11,10 @@ pub struct BinMatrix {
     mzd: ptr::NonNull<Mzd>,
 }
 
+macro_rules! nonnull {
+    ($exp: expr) => { ptr::NonNull::new_unchecked($exp) }
+}
+
 impl BinMatrix {
     /// Create a new matrix
     pub fn new(rows: Vec<BinVector>) -> BinMatrix {
@@ -57,7 +61,7 @@ impl BinMatrix {
         unsafe {
             let mzd_ptr = mzd_init(rows as c_int, rows as c_int);
             mzd_set_ui(mzd_ptr, 1);
-            let mzd = ptr::NonNull::new_unchecked(mzd_ptr);
+            let mzd = nonnull!(mzd_ptr);
             BinMatrix { mzd }
         }
     }
@@ -67,18 +71,27 @@ impl BinMatrix {
     /// Does an echelonization and throws it away!
     #[inline]
     pub fn rank(&self) -> usize {
-        self.clone().echelonized()
+        self.clone().echelonize()
     }
 
     /// Echelonize this matrix in-place
     ///
     /// Return: the rank of the matrix
     #[inline]
-    pub fn echelonized(&mut self) -> usize  {
+    pub fn echelonize(&mut self) -> usize  {
         let rank = unsafe {
             mzd_echelonize(self.mzd.as_ptr(), false as c_int)
         };
         rank as usize
+    }
+
+    /// Compute the inverse of this matrix, returns a new matrix
+    #[inline]
+    pub fn inverted(&self) -> BinMatrix {
+        let mzd = unsafe {
+            nonnull!(mzd_inv_m4ri(ptr::null_mut(), self.mzd.as_ptr(), 0 as c_int))
+        };
+        BinMatrix { mzd }
     }
 
     /// Compute the transpose of the matrix
@@ -87,7 +100,7 @@ impl BinMatrix {
         let mzd;
         unsafe {
             let mzd_ptr = mzd_transpose(ptr::null_mut(), self.mzd.as_ptr());
-            mzd = ptr::NonNull::new_unchecked(mzd_ptr);
+            mzd = nonnull!(mzd_ptr);
         }
         BinMatrix { mzd }
     }
