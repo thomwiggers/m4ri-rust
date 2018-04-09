@@ -66,6 +66,25 @@ impl BinMatrix {
         }
     }
 
+    /// Augment the matrix:
+    ///  [A] [B] => [A B]
+    #[inline]
+    pub fn augmented(&self, other: &BinMatrix) -> BinMatrix {
+        let mzd = unsafe {
+            nonnull!(mzd_concat(ptr::null_mut(), self.mzd.as_ptr(), other.mzd.as_ptr()))
+        };
+        BinMatrix { mzd }
+    }
+
+    /// Stack the matrix with another and return the result
+    #[inline]
+    pub fn stacked(&self, other: &BinMatrix) -> BinMatrix {
+        let mzd = unsafe {
+            nonnull!(mzd_stack(ptr::null_mut(), self.mzd.as_ptr(), other.mzd.as_ptr()))
+        };
+        BinMatrix { mzd }
+    }
+
     /// Get the rank of the matrix
     ///
     /// Does an echelonization and throws it away!

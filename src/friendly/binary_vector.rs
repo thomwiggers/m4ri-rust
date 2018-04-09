@@ -45,6 +45,29 @@ impl BinVector {
     }
 
     #[inline]
+    pub fn from_bools(bools: &[bool]) -> BinVector {
+        let vec = bools.iter().cloned().collect::<Vob>();
+        BinVector { vec }
+    }
+
+    /// Construct the BinVector from the result of a function
+    ///
+    /// # Example
+    /// ```
+    /// let v = BinVector::from_function(4, |i| i % 2 == 0);
+    /// assert_eq!(v.get(0), false);
+    /// assert_eq!(v.get(1), true);
+    /// ```
+    #[inline]
+    pub fn from_function(len: usize, f: fn(usize) -> bool) -> BinVector{
+        let mut vob = Vob::with_capacity(len);
+        for i in 0..len {
+            vob.push(f(i));
+        }
+        BinVector::from(vob)
+    }
+
+    #[inline]
     pub fn with_capacity(len: usize) -> Self {
         BinVector::from(Vob::with_capacity(len))
     }
