@@ -135,7 +135,8 @@ impl<'a> ops::Mul<&'a BinVector> for &'a BinMatrix {
         }
         for (pos, bit) in other.iter().enumerate() {
             unsafe {
-                // FIXME can be done faster
+                // FIXME can maybe be done faster
+                // not sure, because we're writing as a column.
                 mzd_write_bit(vec_mzd, pos as Rci, 0, bit as BIT);
             }
         }
@@ -145,7 +146,7 @@ impl<'a> ops::Mul<&'a BinVector> for &'a BinMatrix {
             let result_mzd = mzd_mul(ptr::null_mut(), self.mzd.as_ptr(), vec_mzd, 0);
             debug_assert_eq!((*result_mzd).ncols as usize, 1, "result is {}x{}", (*result_mzd).nrows, (*result_mzd).ncols);
             debug_assert_eq!((*result_mzd).nrows as usize, self.nrows());
-            for i in 0..other.len() {
+            for i in 0..self.nrows() {
                 // FIXME can be done faster
                 result.push(mzd_read_bit(result_mzd, i as Rci, 0) != 0);
             }
