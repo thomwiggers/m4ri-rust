@@ -4,7 +4,7 @@ use libc::c_int;
 use std::ops;
 use std::clone;
 use std::ptr;
-use binary_vector::BinVector;
+use friendly::binary_vector::BinVector;
 
 /// Structure to represent matrices
 pub struct BinMatrix {
