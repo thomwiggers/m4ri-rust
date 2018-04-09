@@ -54,9 +54,10 @@ impl BinVector {
     ///
     /// # Example
     /// ```
+    /// # use m4ri_rust::friendly::BinVector;
     /// let v = BinVector::from_function(4, |i| i % 2 == 0);
-    /// assert_eq!(v.get(0), false);
-    /// assert_eq!(v.get(1), true);
+    /// assert_eq!(v.get(0), Some(true));
+    /// assert_eq!(v.get(1), Some(false));
     /// ```
     #[inline]
     pub fn from_function(len: usize, f: fn(usize) -> bool) -> BinVector{
