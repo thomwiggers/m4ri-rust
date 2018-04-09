@@ -40,6 +40,11 @@ impl BinVector {
     }
 
     #[inline]
+    pub fn from_elem(len: usize, elem: bool) -> Self {
+        BinVector::from(Vob::from_elem(len, elem))
+    }
+
+    #[inline]
     pub fn with_capacity(len: usize) -> Self {
         BinVector::from(Vob::with_capacity(len))
     }
