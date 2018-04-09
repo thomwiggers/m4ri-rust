@@ -49,7 +49,7 @@ impl BinVector {
         let mut vec = Vob::with_capacity(bytes.len());
         // TODO Speed this up
         for byte in bytes {
-            for i in (0..7).rev() {
+            for i in (0..8).rev() {
                 vec.push(byte >> i & 1u8 == 1u8);
             }
         }
@@ -146,6 +146,12 @@ mod test {
         let b = Vob::from_elem(10, false);
         let b = BinVector::from(b);
         assert_eq!(b.len(), 10);
+    }
+
+    #[test]
+    fn from_bytes() {
+        let b = BinVector::from_bytes(&[0b11111111]);
+        assert_eq!(b.len(), 8);
     }
 
     #[test]
