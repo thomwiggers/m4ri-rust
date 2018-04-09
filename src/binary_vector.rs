@@ -38,6 +38,11 @@ impl BinVector {
         BinVector { vec }
     }
 
+    #[inline]
+    pub fn with_capacity(len: usize) -> Self {
+        BinVector::from(Vob::with_capacity(len))
+    }
+
     /// Create a new BinVector from an `&[u8]`.
     #[inline]
     pub fn from_bytes(bytes: &[u8]) -> BinVector  {
