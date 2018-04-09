@@ -12,23 +12,34 @@ pub struct BinVector {
 
 impl ops::Deref for BinVector {
     type Target = Vob;
+
+    #[inline]
     fn deref(&self) -> &Self::Target {
         &self.vec
     }
 }
 
 impl ops::DerefMut for BinVector {
+
+    #[inline]
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.vec
     }
 }
 
 impl BinVector {
+    #[inline]
+    pub fn new() -> Self {
+        BinVector::from(Vob::new())
+    }
+
+    #[inline]
     pub fn from(vec: Vob) -> Self {
         BinVector { vec }
     }
 
     /// Create a new BinVector from an `&[u8]`.
+    #[inline]
     pub fn from_bytes(bytes: &[u8]) -> BinVector  {
         let mut vec = Vob::with_capacity(bytes.len());
         // TODO Speed this up
@@ -41,10 +52,12 @@ impl BinVector {
         BinVector { vec }
     }
 
+    #[inline]
     pub fn count_ones(&self) -> u32 {
         self.iter_storage().fold(0u32, |acc, block| acc + block.count_ones())
     }
 
+    #[inline]
     pub fn to_vob(self) -> Vob {
         self.vec
     }
