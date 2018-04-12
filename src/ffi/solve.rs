@@ -1,16 +1,16 @@
+use ffi::misc::Rci;
+use ffi::mzd::Mzd;
+use ffi::mzp::Mzp;
 /// System solving with matrix routines
 ///
 /// Corresponds to m4ri/solve.h
 use libc;
-use ffi::mzd::Mzd;
-use ffi::mzp::Mzp;
-use ffi::misc::Rci;
 
 extern "C" {
-    /// Solves A X = B with A and B matrices. 
-    /// 
+    /// Solves A X = B with A and B matrices.
+    ///
     /// The solution X is stored inplace on B.
-    /// 
+    ///
     /// param A Input matrix (overwritten).
     /// param B Input matrix, being overwritten by the solution matrix X
     /// param cutoff Minimal dimension for Strassen recursion (default: 0).
@@ -18,7 +18,12 @@ extern "C" {
     ///       for incosistency (faster without but output not defined if
     ///       system is not consistent).
     /// return 0 if a solution was found, -1 otherwise
-    pub fn mzd_solve_left(a: *mut Mzd, b: *mut Mzd, cutoff: libc::c_int, inconsistency_check: libc::c_int) -> libc::c_int;
+    pub fn mzd_solve_left(
+        a: *mut Mzd,
+        b: *mut Mzd,
+        cutoff: libc::c_int,
+        inconsistency_check: libc::c_int,
+    ) -> libc::c_int;
 
     /// Solves (P L U Q) X = B
     ///
@@ -43,5 +48,13 @@ extern "C" {
     ///       system is not consistent).  
     ///
     /// return 0 if a solution was found, -1 otherwise
-    pub fn mzd_pluq_solve_left(a: *const Mzd, rank: Rci, p: *const Mzp, q: *const Mzp, b: *mut Mzd, cutoff: libc::c_int, inconsistency_check: libc::c_int) -> libc::c_int;
+    pub fn mzd_pluq_solve_left(
+        a: *const Mzd,
+        rank: Rci,
+        p: *const Mzp,
+        q: *const Mzp,
+        b: *mut Mzd,
+        cutoff: libc::c_int,
+        inconsistency_check: libc::c_int,
+    ) -> libc::c_int;
 }

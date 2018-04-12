@@ -74,7 +74,7 @@ impl BinVector {
     }
 
     #[inline]
-    pub fn random(len: usize)  -> BinVector {
+    pub fn random(len: usize) -> BinVector {
         let mut rng = rand::thread_rng();
         let mut vob = Vob::with_capacity(len);
         for _ in 0..len {
@@ -114,9 +114,7 @@ impl BinVector {
     }
 
     pub fn as_matrix(&self) -> BinMatrix {
-        let mzd_ptr = unsafe {
-            mzd_init(1, self.len() as ::libc::c_int)
-        };
+        let mzd_ptr = unsafe { mzd_init(1, self.len() as ::libc::c_int) };
         unsafe {
             debug_assert_eq!((*mzd_ptr).ncols as usize, self.len());
             debug_assert_eq!((*mzd_ptr).nrows, 1);
@@ -127,36 +125,41 @@ impl BinVector {
         // FIXME
         for (column_index, bit) in self.iter().enumerate() {
             unsafe {
-                mzd_write_bit(
-                    mzd_ptr,
-                    0,
-                    column_index as ::libc::c_int,
-                    bit as BIT,
-                );
+                mzd_write_bit(mzd_ptr, 0, column_index as ::libc::c_int, bit as BIT);
             }
         }
         BinMatrix::from_mzd(mzd_ptr)
     }
 
     pub fn as_column_matrix(&self) -> BinMatrix {
-        let mzd_ptr = unsafe {
-            mzd_init(self.len() as ::libc::c_int, 1)
-        };
+        let mzd_ptr = unsafe { mzd_init(self.len() as ::libc::c_int, 1) };
 
         // can we do this faster?
         // Yes we can, but it's a bit scary.
         // FIXME
         for (row_index, bit) in self.iter().enumerate() {
             unsafe {
-                mzd_write_bit(
-                    mzd_ptr,
-                    row_index as ::libc::c_int,
-                    0,
-                    bit as BIT,
-                );
+                mzd_write_bit(mzd_ptr, row_index as ::libc::c_int, 0, bit as BIT);
             }
         }
         BinMatrix::from_mzd(mzd_ptr)
+    }
+
+    pub fn as_u32(&self) -> u32 {
+        assert!(self.len() < 32, "Can't convert this to a >32 bit number");
+        if let Some(i) = self.iter_storage().next() {
+            i as u32
+        } else {
+            0
+        }
+    }
+    pub fn as_u64(&self) -> u64 {
+        assert!(self.len() < 64, "Can't convert this to a >32 bit number");
+        if let Some(i) = self.iter_storage().next() {
+            i as u64
+        } else {
+            0
+        }
     }
 }
 
@@ -286,4 +289,5 @@ mod test {
         assert_eq!(amat.nrows(), 10);
         assert_eq!(amat.as_vector(), a);
     }
+
 }

@@ -2,11 +2,10 @@ use ffi::*;
 use friendly::binary_vector::BinVector;
 use libc::c_int;
 use std::clone;
+use std::cmp;
 use std::ops;
 use std::ptr;
 use vob::Vob;
-use std::cmp;
-
 
 /// Structure to represent matrices
 pub struct BinMatrix {
@@ -60,16 +59,12 @@ impl BinMatrix {
     }
 
     pub fn random(rows: usize, columns: usize) -> BinMatrix {
-        let mzd = unsafe {
-            mzd_init(rows as Rci, columns as Rci)
-        };
+        let mzd = unsafe { mzd_init(rows as Rci, columns as Rci) };
         // Randomize
         unsafe {
             mzd_randomize(mzd);
         }
-        unsafe {
-            BinMatrix { mzd: nonnull!(mzd) }
-        }
+        unsafe { BinMatrix { mzd: nonnull!(mzd) } }
     }
 
     pub fn from_mzd(mzd: *mut Mzd) -> BinMatrix {
@@ -174,9 +169,7 @@ impl BinMatrix {
             assert_eq!(self.ncols(), 1, "needs to have only one column or row");
             let mut b = BinVector::with_capacity(self.ncols());
             for i in 0..self.nrows() {
-                let bit = unsafe {
-                    mzd_read_bit(self.mzd.as_ptr(), i as Rci, 0) == 1
-                };
+                let bit = unsafe { mzd_read_bit(self.mzd.as_ptr(), i as Rci, 0) == 1 };
                 b.push(bit);
             }
             b
@@ -184,9 +177,7 @@ impl BinMatrix {
             assert_eq!(self.nrows(), 1, "needs to have only one column or row");
             let mut b = BinVector::with_capacity(self.ncols());
             for i in 0..self.ncols() {
-                let bit = unsafe {
-                    mzd_read_bit(self.mzd.as_ptr(), 0, i as Rci) == 1
-                };
+                let bit = unsafe { mzd_read_bit(self.mzd.as_ptr(), 0, i as Rci) == 1 };
                 b.push(bit);
             }
             b
@@ -196,9 +187,7 @@ impl BinMatrix {
 
 impl cmp::PartialEq for BinMatrix {
     fn eq(&self, other: &BinMatrix) -> bool {
-        unsafe {
-            mzd_equal(self.mzd.as_ptr(), other.mzd.as_ptr()) == 1
-        }
+        unsafe { mzd_equal(self.mzd.as_ptr(), other.mzd.as_ptr()) == 1 }
     }
 }
 
@@ -243,7 +232,11 @@ impl<'a> ops::Add<&'a BinMatrix> for &'a BinMatrix {
     #[inline]
     fn add(self, other: &BinMatrix) -> Self::Output {
         let mzd = unsafe {
-            nonnull!(mzd_add(ptr::null_mut(), self.mzd.as_ptr(), other.mzd.as_ptr()))
+            nonnull!(mzd_add(
+                ptr::null_mut(),
+                self.mzd.as_ptr(),
+                other.mzd.as_ptr()
+            ))
         };
         BinMatrix { mzd }
     }
@@ -256,7 +249,11 @@ impl ops::Add<BinMatrix> for BinMatrix {
     #[inline]
     fn add(self, other: BinMatrix) -> Self::Output {
         let mzd = unsafe {
-            nonnull!(mzd_add(self.mzd.as_ptr(), self.mzd.as_ptr(), other.mzd.as_ptr()))
+            nonnull!(mzd_add(
+                self.mzd.as_ptr(),
+                self.mzd.as_ptr(),
+                other.mzd.as_ptr()
+            ))
         };
         BinMatrix { mzd }
     }

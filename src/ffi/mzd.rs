@@ -4,12 +4,12 @@
 use libc;
 use std::mem::size_of;
 
-use ffi::misc::BIT;
+use ffi::misc::m4ri_one;
+use ffi::misc::m4ri_radix;
 use ffi::misc::Rci;
 use ffi::misc::Wi;
 use ffi::misc::Word;
-use ffi::misc::m4ri_one;
-use ffi::misc::m4ri_radix;
+use ffi::misc::BIT;
 
 /// Represents the blocks used by M4RI internally
 #[repr(C)]
