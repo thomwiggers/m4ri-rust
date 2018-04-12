@@ -4,11 +4,6 @@ rust:
   - beta
   - nightly
 
-addons:
-  apt:
-    packages:
-      - libm4ri-dev
-
 before_script:
   - rustup component add rustfmt-preview
 
