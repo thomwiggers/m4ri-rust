@@ -6,6 +6,7 @@ use std::ops;
 use std::ptr;
 use vob::Vob;
 
+
 /// Structure to represent matrices
 pub struct BinMatrix {
     mzd: ptr::NonNull<Mzd>,
@@ -207,6 +208,52 @@ impl<'a> ops::Mul<&'a BinMatrix> for &'a BinMatrix {
             BinMatrix {
                 mzd: ptr::NonNull::new(mzd_ptr).expect("Multiplication failed"),
             }
+        }
+    }
+}
+
+impl<'a> ops::Add<&'a BinMatrix> for &'a BinMatrix {
+    type Output = BinMatrix;
+
+    /// Add up two matrices
+    #[inline]
+    fn add(self, other: &BinMatrix) -> Self::Output {
+        let mzd = unsafe {
+            nonnull!(mzd_add(ptr::null_mut(), self.mzd.as_ptr(), other.mzd.as_ptr()))
+        };
+        BinMatrix { mzd }
+    }
+}
+
+impl ops::Add<BinMatrix> for BinMatrix {
+    type Output = BinMatrix;
+
+    /// Add up two matrices, re-uses memory of A
+    #[inline]
+    fn add(self, other: BinMatrix) -> Self::Output {
+        let mzd = unsafe {
+            nonnull!(mzd_add(self.mzd.as_ptr(), self.mzd.as_ptr(), other.mzd.as_ptr()))
+        };
+        BinMatrix { mzd }
+    }
+}
+
+impl ops::AddAssign<BinMatrix> for BinMatrix {
+    /// Add up two matrices, re-uses memory of A
+    #[inline]
+    fn add_assign(&mut self, other: BinMatrix) {
+        unsafe {
+            mzd_add(self.mzd.as_ptr(), self.mzd.as_ptr(), other.mzd.as_ptr());
+        }
+    }
+}
+
+impl<'a> ops::AddAssign<&'a BinMatrix> for BinMatrix {
+    /// Add up two matrices, re-uses memory of A
+    #[inline]
+    fn add_assign(&mut self, other: &BinMatrix) {
+        unsafe {
+            mzd_add(self.mzd.as_ptr(), self.mzd.as_ptr(), other.mzd.as_ptr());
         }
     }
 }

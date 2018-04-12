@@ -195,14 +195,14 @@ extern "C" {
     /// Set C = A + B
     /// If C is passed in, the result is written there
     /// otherwise a new matrix is created
-    pub fn mzd_add(c: *mut Mzd, a: *const Mzd, b: *const Mzd);
+    pub fn mzd_add(c: *mut Mzd, a: *const Mzd, b: *const Mzd) -> *mut Mzd;
 
     /// Set C = A - B
     /// If C is passed in, the result is written there
     /// otherwise a new matrix is created
     ///
     /// Secretly an alias for mzd_add
-    pub fn mzd_sub(c: *mut Mzd, a: *const Mzd, b: *const Mzd);
+    pub fn mzd_sub(c: *mut Mzd, a: *const Mzd, b: *const Mzd) -> *mut Mzd;
 
     /// Zero test for matrix
     pub fn mzd_is_zero(a: *const Mzd);
