@@ -4,7 +4,6 @@
 use std::ops;
 use vob::Vob;
 
-
 /// Wrapper around BitVec
 #[derive(Clone, Debug, PartialEq)]
 pub struct BinVector {
@@ -21,7 +20,6 @@ impl ops::Deref for BinVector {
 }
 
 impl ops::DerefMut for BinVector {
-
     #[inline]
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.vec
@@ -60,7 +58,7 @@ impl BinVector {
     /// assert_eq!(v.get(1), Some(false));
     /// ```
     #[inline]
-    pub fn from_function(len: usize, f: fn(usize) -> bool) -> BinVector{
+    pub fn from_function(len: usize, f: fn(usize) -> bool) -> BinVector {
         let mut vob = Vob::with_capacity(len);
         for i in 0..len {
             vob.push(f(i));
@@ -75,7 +73,7 @@ impl BinVector {
 
     /// Create a new BinVector from an `&[u8]`.
     #[inline]
-    pub fn from_bytes(bytes: &[u8]) -> BinVector  {
+    pub fn from_bytes(bytes: &[u8]) -> BinVector {
         let mut vec = Vob::with_capacity(bytes.len());
         // TODO Speed this up
         for byte in bytes {
@@ -89,7 +87,8 @@ impl BinVector {
 
     #[inline]
     pub fn count_ones(&self) -> u32 {
-        self.iter_storage().fold(0u32, |acc, block| acc + block.count_ones())
+        self.iter_storage()
+            .fold(0u32, |acc, block| acc + block.count_ones())
     }
 
     #[inline]

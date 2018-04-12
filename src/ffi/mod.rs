@@ -8,7 +8,7 @@ mod mzd;
 mod mzp;
 mod ple;
 mod strassen;
-#[macro_use]
+mod solve;
 mod misc;
 
 pub use self::brilliantrussian::*;
@@ -23,3 +23,4 @@ pub use self::mzd::*;
 pub use self::mzp::*;
 pub use self::ple::*;
 pub use self::strassen::*;
+pub use self::solve::*;

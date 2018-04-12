@@ -6,13 +6,6 @@ pub type BIT = libc::c_int;
 pub type Word = u64;
 pub type Wi = libc::c_int;
 
-#[macro_export]
-macro_rules! m4ri_convert_to_word {
-    ($value:expr) => {
-        $value as Word
-    };
-}
-
 /// The number of bits in a word
 #[allow(non_upper_case_globals, dead_code)]
 pub static m4ri_radix: libc::c_int = 64;

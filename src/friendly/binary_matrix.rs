@@ -1,10 +1,10 @@
-use vob::Vob;
 use ffi::*;
-use libc::c_int;
-use std::ops;
-use std::clone;
-use std::ptr;
 use friendly::binary_vector::BinVector;
+use libc::c_int;
+use std::clone;
+use std::ops;
+use std::ptr;
+use vob::Vob;
 
 /// Structure to represent matrices
 pub struct BinMatrix {
@@ -12,7 +12,9 @@ pub struct BinMatrix {
 }
 
 macro_rules! nonnull {
-    ($exp: expr) => { ptr::NonNull::new_unchecked($exp) }
+    ($exp:expr) => {
+        ptr::NonNull::new_unchecked($exp)
+    };
 }
 
 impl BinMatrix {
@@ -71,7 +73,11 @@ impl BinMatrix {
     #[inline]
     pub fn augmented(&self, other: &BinMatrix) -> BinMatrix {
         let mzd = unsafe {
-            nonnull!(mzd_concat(ptr::null_mut(), self.mzd.as_ptr(), other.mzd.as_ptr()))
+            nonnull!(mzd_concat(
+                ptr::null_mut(),
+                self.mzd.as_ptr(),
+                other.mzd.as_ptr()
+            ))
         };
         BinMatrix { mzd }
     }
@@ -80,7 +86,11 @@ impl BinMatrix {
     #[inline]
     pub fn stacked(&self, other: &BinMatrix) -> BinMatrix {
         let mzd = unsafe {
-            nonnull!(mzd_stack(ptr::null_mut(), self.mzd.as_ptr(), other.mzd.as_ptr()))
+            nonnull!(mzd_stack(
+                ptr::null_mut(),
+                self.mzd.as_ptr(),
+                other.mzd.as_ptr()
+            ))
         };
         BinMatrix { mzd }
     }
@@ -97,19 +107,15 @@ impl BinMatrix {
     ///
     /// Return: the rank of the matrix
     #[inline]
-    pub fn echelonize(&mut self) -> usize  {
-        let rank = unsafe {
-            mzd_echelonize(self.mzd.as_ptr(), false as c_int)
-        };
+    pub fn echelonize(&mut self) -> usize {
+        let rank = unsafe { mzd_echelonize(self.mzd.as_ptr(), false as c_int) };
         rank as usize
     }
 
     /// Compute the inverse of this matrix, returns a new matrix
     #[inline]
     pub fn inverted(&self) -> BinMatrix {
-        let mzd = unsafe {
-            nonnull!(mzd_inv_m4ri(ptr::null_mut(), self.mzd.as_ptr(), 0 as c_int))
-        };
+        let mzd = unsafe { nonnull!(mzd_inv_m4ri(ptr::null_mut(), self.mzd.as_ptr(), 0 as c_int)) };
         BinMatrix { mzd }
     }
 
@@ -153,9 +159,7 @@ impl ops::Mul<BinMatrix> for BinMatrix {
 
 impl clone::Clone for BinMatrix {
     fn clone(&self) -> Self {
-        let mzd = unsafe {
-            nonnull!(mzd_copy(ptr::null_mut(), self.mzd.as_ptr()))
-        };
+        let mzd = unsafe { nonnull!(mzd_copy(ptr::null_mut(), self.mzd.as_ptr())) };
         BinMatrix { mzd }
     }
 }
@@ -207,7 +211,13 @@ impl<'a> ops::Mul<&'a BinVector> for &'a BinMatrix {
         let mut result = Vob::with_capacity(other.len());
         unsafe {
             let result_mzd = mzd_mul(ptr::null_mut(), self.mzd.as_ptr(), vec_mzd, 0);
-            debug_assert_eq!((*result_mzd).ncols as usize, 1, "result is {}x{}", (*result_mzd).nrows, (*result_mzd).ncols);
+            debug_assert_eq!(
+                (*result_mzd).ncols as usize,
+                1,
+                "result is {}x{}",
+                (*result_mzd).nrows,
+                (*result_mzd).ncols
+            );
             debug_assert_eq!((*result_mzd).nrows as usize, self.nrows());
             for i in 0..self.nrows() {
                 // FIXME can be done faster
@@ -232,9 +242,7 @@ impl<'a> ops::Mul<&'a BinMatrix> for &'a BinVector {
     #[inline]
     /// computes v^T * A
     fn mul(self, other: &BinMatrix) -> Self::Output {
-        let vec_mzd = unsafe {
-            mzd_init(1, self.len() as Rci)
-        };
+        let vec_mzd = unsafe { mzd_init(1, self.len() as Rci) };
 
         unsafe {
             debug_assert_eq!((*vec_mzd).ncols as usize, self.len());
@@ -249,16 +257,14 @@ impl<'a> ops::Mul<&'a BinMatrix> for &'a BinVector {
             }
         }
 
-        let tmp = unsafe {
-            mzd_init(1, self.len() as Rci)
-        };
+        let tmp = unsafe { mzd_init(1, self.len() as Rci) };
 
-        let mzd = unsafe {
-            _mzd_mul_va(tmp, vec_mzd, other.mzd.as_ptr(), 1)
-        };
+        let mzd = unsafe { _mzd_mul_va(tmp, vec_mzd, other.mzd.as_ptr(), 1) };
 
         // FIXME can this be done faster.
-        let resultvob = (0..self.len()).map(|i| unsafe { mzd_read_bit(mzd, 0, i as Rci) == 1 }).collect::<Vob>();
+        let resultvob = (0..self.len())
+            .map(|i| unsafe { mzd_read_bit(mzd, 0, i as Rci) == 1 })
+            .collect::<Vob>();
 
         BinVector::from(resultvob)
     }
@@ -272,6 +278,19 @@ impl ops::Mul<BinMatrix> for BinVector {
     fn mul(self, other: BinMatrix) -> Self::Output {
         &self * &other
     }
+}
+
+/// Solve AX = B for X
+///
+/// Modifies B in-place
+///
+/// B will contain the solution afterwards
+///
+/// Return True if it succeeded
+pub fn solve_left(a: BinMatrix, b: &mut BinMatrix) -> bool {
+    let result = unsafe { mzd_solve_left(a.mzd.as_ptr(), b.mzd.as_ptr(), 0, 1) };
+
+    result == 0
 }
 
 #[cfg(test)]
@@ -290,16 +309,36 @@ mod test {
     #[test]
     fn identity() {
         let id = BinMatrix::new(vec![
-            BinVector::from(vob![true, false, false, false, false, false, false, false, false, false]),
-            BinVector::from(vob![false, true, false, false, false, false, false, false, false, false]),
-            BinVector::from(vob![false, false, true, false, false, false, false, false, false, false]),
-            BinVector::from(vob![false, false, false, true, false, false, false, false, false, false]),
-            BinVector::from(vob![false, false, false, false, true, false, false, false, false, false]),
-            BinVector::from(vob![false, false, false, false, false, true, false, false, false, false]),
-            BinVector::from(vob![false, false, false, false, false, false, true, false, false, false]),
-            BinVector::from(vob![false, false, false, false, false, false, false, true, false, false]),
-            BinVector::from(vob![false, false, false, false, false, false, false, false, true, false]),
-            BinVector::from(vob![false, false, false, false, false, false, false, false, false, true]),
+            BinVector::from(vob![
+                true, false, false, false, false, false, false, false, false, false
+            ]),
+            BinVector::from(vob![
+                false, true, false, false, false, false, false, false, false, false
+            ]),
+            BinVector::from(vob![
+                false, false, true, false, false, false, false, false, false, false
+            ]),
+            BinVector::from(vob![
+                false, false, false, true, false, false, false, false, false, false
+            ]),
+            BinVector::from(vob![
+                false, false, false, false, true, false, false, false, false, false
+            ]),
+            BinVector::from(vob![
+                false, false, false, false, false, true, false, false, false, false
+            ]),
+            BinVector::from(vob![
+                false, false, false, false, false, false, true, false, false, false
+            ]),
+            BinVector::from(vob![
+                false, false, false, false, false, false, false, true, false, false
+            ]),
+            BinVector::from(vob![
+                false, false, false, false, false, false, false, false, true, false
+            ]),
+            BinVector::from(vob![
+                false, false, false, false, false, false, false, false, false, true
+            ]),
         ]);
 
         let id_gen = BinMatrix::identity(10);
