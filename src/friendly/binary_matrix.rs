@@ -57,6 +57,11 @@ impl BinMatrix {
         BinMatrix { mzd }
     }
 
+    pub fn from_mzd(mzd: *mut Mzd) -> BinMatrix {
+        let mzd = ptr::NonNull::new(mzd).expect("Can't be NULL");
+        BinMatrix { mzd }
+    }
+
     /// Get an identity matrix
     #[inline]
     pub fn identity(rows: usize) -> BinMatrix {
@@ -144,6 +149,33 @@ impl BinMatrix {
     #[inline]
     pub fn ncols(&self) -> usize {
         unsafe { self.mzd.as_ref().ncols as usize }
+    }
+
+    /// Get as a vector
+    ///
+    /// Works both on single-column and single-row matrices
+    pub fn as_vector(&self) -> BinVector {
+        if self.nrows() != 1 {
+            assert_eq!(self.ncols(), 1, "needs to have only one column or row");
+            let mut b = BinVector::with_capacity(self.ncols());
+            for i in 0..self.ncols() {
+                let bit = unsafe {
+                    mzd_read_bit(self.mzd.as_ptr(), 0, i as Rci) == 1
+                };
+                b.push(bit);
+            }
+            b
+        } else {
+            assert_eq!(self.nrows(), 1, "needs to have only one column or row");
+            let mut b = BinVector::with_capacity(self.ncols());
+            for i in 0..self.ncols() {
+                let bit = unsafe {
+                    mzd_read_bit(self.mzd.as_ptr(), i as Rci, 0) == 1
+                };
+                b.push(bit);
+            }
+            b
+        }
     }
 }
 

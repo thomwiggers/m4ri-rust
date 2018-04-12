@@ -4,6 +4,10 @@
 use std::ops;
 use vob::Vob;
 
+use ffi::*;
+
+use friendly::binary_matrix::BinMatrix;
+
 /// Wrapper around BitVec
 #[derive(Clone, Debug, PartialEq)]
 pub struct BinVector {
@@ -94,6 +98,48 @@ impl BinVector {
     #[inline]
     pub fn to_vob(self) -> Vob {
         self.vec
+    }
+
+    pub fn as_matrix(&self) -> BinMatrix {
+        let mzd_ptr = unsafe {
+            mzd_init(self.len() as ::libc::c_int, 1 as ::libc::c_int)
+        };
+
+        // can we do this faster?
+        // Yes we can, but it's a bit scary.
+        // FIXME
+        for (column_index, bit) in self.iter().enumerate() {
+            unsafe {
+                mzd_write_bit(
+                    mzd_ptr,
+                    1,
+                    column_index as ::libc::c_int,
+                    bit as BIT,
+                );
+            }
+        }
+        BinMatrix::from_mzd(mzd_ptr)
+    }
+
+    pub fn as_column_matrix(&self) -> BinMatrix {
+        let mzd_ptr = unsafe {
+            mzd_init(1, self.len() as ::libc::c_int)
+        };
+
+        // can we do this faster?
+        // Yes we can, but it's a bit scary.
+        // FIXME
+        for (row_index, bit) in self.iter().enumerate() {
+            unsafe {
+                mzd_write_bit(
+                    mzd_ptr,
+                    row_index as ::libc::c_int,
+                    1,
+                    bit as BIT,
+                );
+            }
+        }
+        BinMatrix::from_mzd(mzd_ptr)
     }
 }
 
