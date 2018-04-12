@@ -4,5 +4,7 @@ extern crate libc;
 #[cfg_attr(test, macro_use)]
 extern crate vob;
 
+extern crate rand;
+
 pub mod ffi;
 pub mod friendly;

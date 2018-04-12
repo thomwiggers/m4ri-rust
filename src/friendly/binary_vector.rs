@@ -4,6 +4,9 @@
 use std::ops;
 use vob::Vob;
 
+use rand;
+use rand::Rng;
+
 use ffi::*;
 
 use friendly::binary_matrix::BinMatrix;
@@ -71,6 +74,16 @@ impl BinVector {
     }
 
     #[inline]
+    pub fn random(len: usize)  -> BinVector {
+        let mut rng = rand::thread_rng();
+        let mut vob = Vob::with_capacity(len);
+        for _ in 0..len {
+            vob.push(rng.gen());
+        }
+        BinVector::from(vob)
+    }
+
+    #[inline]
     pub fn with_capacity(len: usize) -> Self {
         BinVector::from(Vob::with_capacity(len))
     }
@@ -102,8 +115,12 @@ impl BinVector {
 
     pub fn as_matrix(&self) -> BinMatrix {
         let mzd_ptr = unsafe {
-            mzd_init(self.len() as ::libc::c_int, 1 as ::libc::c_int)
+            mzd_init(1, self.len() as ::libc::c_int)
         };
+        unsafe {
+            debug_assert_eq!((*mzd_ptr).ncols as usize, self.len());
+            debug_assert_eq!((*mzd_ptr).nrows, 1);
+        }
 
         // can we do this faster?
         // Yes we can, but it's a bit scary.
@@ -112,7 +129,7 @@ impl BinVector {
             unsafe {
                 mzd_write_bit(
                     mzd_ptr,
-                    1,
+                    0,
                     column_index as ::libc::c_int,
                     bit as BIT,
                 );
@@ -123,7 +140,7 @@ impl BinVector {
 
     pub fn as_column_matrix(&self) -> BinMatrix {
         let mzd_ptr = unsafe {
-            mzd_init(1, self.len() as ::libc::c_int)
+            mzd_init(self.len() as ::libc::c_int, 1)
         };
 
         // can we do this faster?
@@ -134,7 +151,7 @@ impl BinVector {
                 mzd_write_bit(
                     mzd_ptr,
                     row_index as ::libc::c_int,
-                    1,
+                    0,
                     bit as BIT,
                 );
             }
@@ -250,5 +267,23 @@ mod test {
 
         assert_eq!(false, c);
         assert_eq!(c, a * b);
+    }
+
+    #[test]
+    fn as_matrix() {
+        let a = BinVector::random(10);
+        let amat = a.as_matrix();
+        assert_eq!(amat.ncols(), 10);
+        assert_eq!(amat.nrows(), 1);
+        assert_eq!(amat.as_vector(), a);
+    }
+
+    #[test]
+    fn as_column_matrix() {
+        let a = BinVector::random(10);
+        let amat = a.as_column_matrix();
+        assert_eq!(amat.ncols(), 1);
+        assert_eq!(amat.nrows(), 10);
+        assert_eq!(amat.as_vector(), a);
     }
 }

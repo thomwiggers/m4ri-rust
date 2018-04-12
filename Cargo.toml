@@ -13,6 +13,7 @@ maintenance = { status = "experimental" }
 [dependencies]
 libc = "^0.2"
 vob  = "^1.1.0"
+rand = "^0.4.0"
 
 [profile.release]
 lto = true

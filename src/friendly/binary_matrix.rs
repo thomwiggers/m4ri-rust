@@ -5,6 +5,7 @@ use std::clone;
 use std::ops;
 use std::ptr;
 use vob::Vob;
+use std::cmp;
 
 
 /// Structure to represent matrices
@@ -56,6 +57,19 @@ impl BinMatrix {
             mzd = ptr::NonNull::new_unchecked(mzd_ptr);
         }
         BinMatrix { mzd }
+    }
+
+    pub fn random(rows: usize, columns: usize) -> BinMatrix {
+        let mzd = unsafe {
+            mzd_init(rows as Rci, columns as Rci)
+        };
+        // Randomize
+        unsafe {
+            mzd_randomize(mzd);
+        }
+        unsafe {
+            BinMatrix { mzd: nonnull!(mzd) }
+        }
     }
 
     pub fn from_mzd(mzd: *mut Mzd) -> BinMatrix {
@@ -159,9 +173,9 @@ impl BinMatrix {
         if self.nrows() != 1 {
             assert_eq!(self.ncols(), 1, "needs to have only one column or row");
             let mut b = BinVector::with_capacity(self.ncols());
-            for i in 0..self.ncols() {
+            for i in 0..self.nrows() {
                 let bit = unsafe {
-                    mzd_read_bit(self.mzd.as_ptr(), 0, i as Rci) == 1
+                    mzd_read_bit(self.mzd.as_ptr(), i as Rci, 0) == 1
                 };
                 b.push(bit);
             }
@@ -171,7 +185,7 @@ impl BinMatrix {
             let mut b = BinVector::with_capacity(self.ncols());
             for i in 0..self.ncols() {
                 let bit = unsafe {
-                    mzd_read_bit(self.mzd.as_ptr(), i as Rci, 0) == 1
+                    mzd_read_bit(self.mzd.as_ptr(), 0, i as Rci) == 1
                 };
                 b.push(bit);
             }
@@ -179,6 +193,16 @@ impl BinMatrix {
         }
     }
 }
+
+impl cmp::PartialEq for BinMatrix {
+    fn eq(&self, other: &BinMatrix) -> bool {
+        unsafe {
+            mzd_equal(self.mzd.as_ptr(), other.mzd.as_ptr()) == 1
+        }
+    }
+}
+
+impl cmp::Eq for BinMatrix {}
 
 impl ops::Mul<BinMatrix> for BinMatrix {
     type Output = BinMatrix;
@@ -464,5 +488,18 @@ mod test {
 
         let result: BinVector = &binvec * &m1;
         assert_eq!(result, binvec);
+    }
+
+    #[test]
+    fn test_random() {
+        let m1 = BinMatrix::random(10, 1);
+    }
+
+    #[test]
+    fn test_as_vector() {
+        let m1 = BinMatrix::random(10, 1);
+        let vec = m1.as_vector();
+        assert_eq!(vec.len(), 10);
+        assert!(m1 == vec.as_column_matrix());
     }
 }
