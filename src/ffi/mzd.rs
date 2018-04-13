@@ -74,6 +74,8 @@ pub struct Mzd {
     pub rows: *const *mut Word,
 }
 
+static MZD_FLAG_MULTIPLE_BLOCKS: u8 = 0x20;
+
 extern "C" {
     /// Create a new rows x columns matrix
     pub fn mzd_init(rows: Rci, columns: Rci) -> *mut Mzd;
@@ -246,7 +248,26 @@ pub unsafe fn mzd_read_bit(matrix: *const Mzd, row: Rci, col: Rci) -> BIT {
 #[inline]
 pub unsafe fn mzd_first_row(matrix: *const Mzd) -> *mut Word {
     let result: *mut Word = (*(*matrix).blocks).begin.offset((*matrix).offset_vector as isize);
-    assert!((*matrix).nrows == 0 || result == *(*matrix).rows);
+    debug_assert!((*matrix).nrows == 0 || result == *(*matrix).rows, "Result is not the expected ptr");
+    result
+}
+
+/// Get pointer to first word of row
+///
+/// Param M Matrix
+/// Param row the row index
+#[inline]
+pub unsafe fn mzd_row(matrix: *const Mzd, row: Rci) -> *mut Word {
+    let big_vector: Wi = (*matrix).offset_vector +row * (*matrix).rowstride;
+    let mut result: *mut Word = (*(*matrix).blocks).begin.offset(big_vector as isize);
+
+    // FIXME __M4RI_UNLIKELY -> _builtin_expect
+    if (*matrix).flags & MZD_FLAG_MULTIPLE_BLOCKS != 0 {
+        let n = ((*matrix).row_offset + row) >> (*matrix).blockrows_log;
+        result = (*(*matrix).blocks.offset(n as isize)).begin.offset((big_vector - n * ((*(*matrix).blocks).size / ::std::mem::size_of::<Word>()) as i32) as isize);
+    }
+
+    debug_assert_eq!(result, *(*matrix).rows.offset(row as isize), "Result is not the expected ptr");
     result
 }
 
@@ -278,6 +299,24 @@ mod test {
             let m2 = mzd_copy(ptr::null_mut(), matrix);
             mzd_randomize(m2);
             assert_eq!(mzd_equal(m2, matrix), 0);
+        }
+    }
+
+    #[test]
+    fn test_mzd_first_row() {
+        unsafe {
+            let matrix = mzd_init(10,10);
+            mzd_set_ui(matrix, 0);
+            mzd_first_row(matrix);
+        }
+    }
+
+    #[test]
+    fn test_mzd_row() {
+        unsafe {
+            let matrix = mzd_init(10,10);
+            mzd_set_ui(matrix, 0);
+            mzd_row(matrix, 5);
         }
     }
 }
