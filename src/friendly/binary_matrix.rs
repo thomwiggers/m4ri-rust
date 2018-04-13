@@ -8,6 +8,7 @@ use std::ptr;
 use vob::Vob;
 
 /// Structure to represent matrices
+#[derive(Debug)]
 pub struct BinMatrix {
     mzd: ptr::NonNull<Mzd>,
 }
@@ -489,7 +490,7 @@ mod test {
 
     #[test]
     fn test_random() {
-        let m1 = BinMatrix::random(10, 1);
+        BinMatrix::random(10, 1);
     }
 
     #[test]
