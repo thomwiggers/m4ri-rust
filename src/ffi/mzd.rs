@@ -74,7 +74,20 @@ pub struct Mzd {
     pub rows: *const *mut Word,
 }
 
-static MZD_FLAG_MULTIPLE_BLOCKS: u8 = 0x20;
+/// Flag when `ncols%64 == 0`
+pub static MZD_FLAG_NONZERO_EXCESS: u8 = 0x2;
+
+/// Flag for windowed matrix
+pub static MZD_FLAG_WINDOWED_ZEROOFFSET: u8 = 0x4;
+
+/// Flag for windowed matrix where `ncols % 64 == 0`
+pub static MZD_FLAG_WINDOWED_ZEROEXCESS: u8 = 0x8;
+
+/// Flag for windowed matrix which owns its memory
+pub static MZD_FLAG_WINDOWED_OWNSBLOCKS: u8 = 0x10;
+
+/// Flag for multiple blocks
+pub static MZD_FLAG_MULTIPLE_BLOCKS: u8 = 0x20;
 
 extern "C" {
     /// Create a new rows x columns matrix
@@ -269,6 +282,20 @@ pub unsafe fn mzd_row(matrix: *const Mzd, row: Rci) -> *mut Word {
 
     debug_assert_eq!(result, *(*matrix).rows.offset(row as isize), "Result is not the expected ptr");
     result
+}
+
+/// Test if a matrix is windowed
+///
+/// return a non-zero value if the matrix is windowed, otherwise return zero
+#[inline]
+pub unsafe fn mzd_is_windowed(m: *const Mzd) -> u8 {
+    (*m).flags & MZD_FLAG_WINDOWED_ZEROOFFSET
+}
+
+/// Test if this mzd_t should free blocks
+#[inline]
+pub unsafe fn mzd_owns_blocks(m: *const Mzd) -> bool {
+    !(*m).blocks.is_null() && (mzd_is_windowed(m) == 0 || (((*m).flags & MZD_FLAG_WINDOWED_OWNSBLOCKS != 0)))
 }
 
 impl Drop for Mzd {
