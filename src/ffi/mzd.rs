@@ -14,7 +14,9 @@ use ffi::misc::BIT;
 /// Represents the blocks used by M4RI internally
 #[repr(C)]
 struct MzdBlock {
-    private: [u8; 0],
+    size: libc::size_t,
+    begin: *mut Word,
+    end: *mut Word,
 }
 
 /// Represents the Mzd data type used by M4RI
@@ -234,6 +236,18 @@ pub unsafe fn mzd_read_bit(matrix: *const Mzd, row: Rci, col: Rci) -> BIT {
 
     let thebit = (column >> (col % m4ri_radix)) & m4ri_one;
     thebit as BIT
+}
+
+/// Get a pointer to the first word
+///
+/// param: M: matrix
+///
+/// Return a pointer to the first word of the first row
+#[inline]
+pub unsafe fn mzd_first_row(matrix: *const Mzd) -> *mut Word {
+    let result: *mut Word = (*(*matrix).blocks).begin.offset((*matrix).offset_vector as isize);
+    assert!((*matrix).nrows == 0 || result == *(*matrix).rows);
+    result
 }
 
 impl Drop for Mzd {
