@@ -13,6 +13,9 @@ pub struct BinMatrix {
     mzd: ptr::NonNull<Mzd>,
 }
 
+unsafe impl Send for BinMatrix {}
+unsafe impl Sync for BinMatrix {}
+
 macro_rules! nonnull {
     ($exp:expr) => {
         ptr::NonNull::new_unchecked($exp)
