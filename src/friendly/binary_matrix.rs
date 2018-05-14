@@ -299,8 +299,8 @@ impl<'a> ops::Mul<&'a BinVector> for &'a BinMatrix {
 
         let vec_mzd = unsafe {
             let vec_mzd = mzd_init(other.len() as Rci, 1);
-            debug_assert_eq!((*vec_mzd).nrows as usize, other.len());
-            debug_assert_eq!((*vec_mzd).ncols as usize, 1);
+            debug_assert_eq!((*vec_mzd).nrows as usize, other.len(), "Row length doesn't match");
+            debug_assert_eq!((*vec_mzd).ncols as usize, 1, "column length doesn't match");
             vec_mzd
         };
 
