@@ -327,40 +327,83 @@ mod test {
 
     #[test]
     fn init() {
-        let result: libc::c_int;
-        unsafe {
-            assert_eq!(mem::size_of::<Mzd>(), 64);
-            let matrix = mzd_init(10, 10);
-            assert!(!(*matrix).blocks.is_null());
-            assert!(!(*matrix).rows.is_null());
-            mzd_randomize(matrix);
-            result = mzd_equal(matrix, matrix);
-            assert_eq!(result, 1);
-            let m2 = mzd_copy(ptr::null_mut(), matrix);
-            mzd_randomize(m2);
-            assert_eq!(mzd_equal(m2, matrix), 0);
-            ptr::drop_in_place(matrix);
-            ptr::drop_in_place(m2);
+        for _ in 0..100 {
+            let result: libc::c_int;
+            unsafe {
+                assert_eq!(mem::size_of::<Mzd>(), 64);
+                let matrix = mzd_init(10, 10);
+                assert!(!(*matrix).blocks.is_null());
+                assert!(!(*matrix).rows.is_null());
+                mzd_randomize(matrix);
+                result = mzd_equal(matrix, matrix);
+                assert_eq!(result, 1);
+                let m2 = mzd_copy(ptr::null_mut(), matrix);
+                mzd_randomize(m2);
+                assert_eq!(mzd_equal(m2, matrix), 0);
+                ptr::drop_in_place(matrix);
+                ptr::drop_in_place(m2);
+            }
         }
     }
-
     #[test]
     fn test_mzd_first_row() {
-        unsafe {
-            let matrix = mzd_init(10, 10);
-            mzd_set_ui(matrix, 0);
-            mzd_first_row(matrix);
-            ptr::drop_in_place(matrix);
+        for _ in 0..100 {
+            unsafe {
+                let matrix = mzd_init(10, 10);
+                mzd_set_ui(matrix, 0);
+                mzd_first_row(matrix);
+                ptr::drop_in_place(matrix);
+            }
         }
     }
 
     #[test]
     fn test_mzd_row() {
-        unsafe {
-            let matrix = mzd_init(10, 10);
-            mzd_set_ui(matrix, 0);
-            mzd_row(matrix, 5);
-            ptr::drop_in_place(matrix);
+        for _ in 0..100 {
+            unsafe {
+                let matrix = mzd_init(10, 10);
+                mzd_set_ui(matrix, 0);
+                mzd_row(matrix, 5);
+                ptr::drop_in_place(matrix);
+            }
+        }
+    }
+
+    #[test]
+    fn test_mzd_read_bit() {
+        for _ in 0..10 {
+            unsafe {
+                let matrix = mzd_init(1000, 1000);
+                mzd_set_ui(matrix, 1);
+                for i in 0..1000 {
+                    for j in 0..1000 {
+                        let bit = mzd_read_bit(matrix, i as Rci, j as Rci);
+                        assert_eq!(bit == 1, i == j, "Should be unit matrix");
+                    }
+                }
+                ptr::drop_in_place(matrix);
+            }
+        }
+    }
+
+    #[test]
+    fn test_mzd_write_bit() {
+        for _ in 0..10 {
+            unsafe {
+                let matrix = mzd_init(1000, 1000);
+                for i in 0..1000 {
+                    for j in 0..1000 {
+                        mzd_write_bit(matrix, i as Rci, j as Rci, if i == j { 1 } else { 0 });
+                    }
+                }
+                for i in 0..1000 {
+                    for j in 0..1000 {
+                        let bit = mzd_read_bit(matrix, i as Rci, j as Rci);
+                        assert_eq!(bit == 1, i == j, "Should be unit matrix");
+                    }
+                }
+                ptr::drop_in_place(matrix);
+            }
         }
     }
 }

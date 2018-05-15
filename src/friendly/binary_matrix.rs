@@ -5,7 +5,6 @@ use std::clone;
 use std::cmp;
 use std::ops;
 use std::ptr;
-use vob::Vob;
 
 /// Structure to represent matrices
 #[derive(Debug)]
@@ -223,7 +222,7 @@ impl<'a> ops::Mul<&'a BinMatrix> for &'a BinMatrix {
     #[inline]
     fn mul(self, other: &BinMatrix) -> Self::Output {
         unsafe {
-            let mzd_ptr = mzd_mul_naive(ptr::null_mut(), self.mzd.as_ptr(), other.mzd.as_ptr());
+            let mzd_ptr = mzd_mul(ptr::null_mut(), self.mzd.as_ptr(), other.mzd.as_ptr(), 0);
 
             BinMatrix {
                 mzd: ptr::NonNull::new(mzd_ptr).expect("Multiplication failed"),
@@ -300,44 +299,8 @@ impl<'a> ops::Mul<&'a BinVector> for &'a BinMatrix {
             other.len()
         );
 
-        let vec_mzd = unsafe {
-            let vec_mzd = mzd_init(other.len() as Rci, 1);
-            debug_assert_eq!(
-                (*vec_mzd).nrows as usize,
-                other.len(),
-                "Row length doesn't match"
-            );
-            debug_assert_eq!((*vec_mzd).ncols as usize, 1, "column length doesn't match");
-            vec_mzd
-        };
+        (self * &other.as_column_matrix()).as_vector()
 
-        for (pos, bit) in other.iter().enumerate() {
-            unsafe {
-                // FIXME can maybe be done faster
-                // We're writing as a row here
-                mzd_write_bit(vec_mzd, pos as Rci, 0, bit as BIT);
-            }
-        }
-
-        let mut result = Vob::with_capacity(other.len());
-        unsafe {
-            let result_mzd = mzd_mul_naive(ptr::null_mut(), self.mzd.as_ptr(), vec_mzd);
-            ptr::drop_in_place(vec_mzd);
-            debug_assert_eq!(
-                (*result_mzd).ncols as usize,
-                1,
-                "result is {}x{}",
-                (*result_mzd).nrows,
-                (*result_mzd).ncols
-            );
-            debug_assert_eq!((*result_mzd).nrows as usize, self.nrows());
-            for i in 0..self.nrows() {
-                // FIXME can be done faster
-                result.push(mzd_read_bit(result_mzd, i as Rci, 0) != 0);
-            }
-            ptr::drop_in_place(result_mzd);
-        }
-        BinVector::from(result)
     }
 }
 
@@ -355,42 +318,16 @@ impl<'a> ops::Mul<&'a BinMatrix> for &'a BinVector {
     #[inline]
     /// computes v^T * A
     fn mul(self, other: &BinMatrix) -> Self::Output {
-        let vec_mzd = unsafe { mzd_init(1, self.len() as Rci) };
-
-        unsafe {
-            debug_assert_eq!((*vec_mzd).ncols as usize, self.len());
-            debug_assert_eq!((*vec_mzd).nrows as usize, 1);
-        }
-
-        for (pos, bit) in self.iter().enumerate() {
-            unsafe {
-                // FIXME can maybe be done faster
-                // not sure, because we're writing as a column.
-                mzd_write_bit(vec_mzd, 0, pos as Rci, bit as BIT);
-            }
-        }
-
+        let vec_mzd = self.as_matrix();
         let tmp = unsafe {
             let tmp = mzd_init(1, self.len() as Rci);
-            _mzd_mul_va(tmp, vec_mzd, other.mzd.as_ptr(), 1)
+            BinMatrix::from_mzd(_mzd_mul_va(tmp, vec_mzd.mzd.as_ptr(), other.mzd.as_ptr(), 1))
         };
 
-        unsafe {
-            debug_assert_eq!((*tmp).nrows as usize, 1);
-            debug_assert_eq!((*tmp).ncols as usize, self.len());
-        }
+        debug_assert_eq!(tmp.nrows(), 1);
+        debug_assert_eq!(tmp.ncols(), self.len());
 
-        // FIXME can this be done faster.
-        let resultvob = (0..self.len())
-            .map(|i| unsafe { mzd_read_bit(tmp, 0, i as Rci) == 1 })
-            .collect::<Vob>();
-
-        unsafe {
-            ptr::drop_in_place(tmp);
-            ptr::drop_in_place(vec_mzd);
-        }
-
-        BinVector::from(resultvob)
+        tmp.as_vector()
     }
 }
 
