@@ -12,7 +12,6 @@ pub struct BinMatrix {
     mzd: ptr::NonNull<Mzd>,
 }
 
-unsafe impl Send for BinMatrix {}
 unsafe impl Sync for BinMatrix {}
 
 impl ops::Drop for BinMatrix {
