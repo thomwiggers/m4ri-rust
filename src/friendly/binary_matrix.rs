@@ -16,6 +16,14 @@ pub struct BinMatrix {
 unsafe impl Send for BinMatrix {}
 unsafe impl Sync for BinMatrix {}
 
+impl ops::Drop for BinMatrix {
+    fn drop(&mut self) {
+        unsafe {
+            ptr::drop_in_place(self.mzd.as_ptr())
+        }
+    }
+}
+
 macro_rules! nonnull {
     ($exp:expr) => {
         ptr::NonNull::new_unchecked($exp)
@@ -34,10 +42,9 @@ impl BinMatrix {
                 debug_assert_eq!(first_col_length, row.len());
             }
         }
-        let mzd_ptr;
-        unsafe {
-            mzd_ptr = mzd_init(rows.len() as c_int, rows[0].len() as c_int);
-        }
+        let mzd_ptr = unsafe {
+            mzd_init(rows.len() as c_int, rows[0].len() as c_int)
+        };
 
         // can we do this faster?
         // Yes we can, but it's a bit scary.
@@ -55,11 +62,9 @@ impl BinMatrix {
             }
         }
 
-        let mzd;
         unsafe {
-            mzd = ptr::NonNull::new_unchecked(mzd_ptr);
+            BinMatrix { mzd: nonnull!(mzd_ptr) }
         }
-        BinMatrix { mzd }
     }
 
     pub fn random(rows: usize, columns: usize) -> BinMatrix {
@@ -307,7 +312,7 @@ impl<'a> ops::Mul<&'a BinVector> for &'a BinMatrix {
         for (pos, bit) in other.iter().enumerate() {
             unsafe {
                 // FIXME can maybe be done faster
-                // not sure, because we're writing as a column.
+                // We're writing as a row here
                 mzd_write_bit(vec_mzd, pos as Rci, 0, bit as BIT);
             }
         }
@@ -315,6 +320,7 @@ impl<'a> ops::Mul<&'a BinVector> for &'a BinMatrix {
         let mut result = Vob::with_capacity(other.len());
         unsafe {
             let result_mzd = mzd_mul(ptr::null_mut(), self.mzd.as_ptr(), vec_mzd, 0);
+            ptr::drop_in_place(vec_mzd);
             debug_assert_eq!(
                 (*result_mzd).ncols as usize,
                 1,
@@ -327,6 +333,7 @@ impl<'a> ops::Mul<&'a BinVector> for &'a BinMatrix {
                 // FIXME can be done faster
                 result.push(mzd_read_bit(result_mzd, i as Rci, 0) != 0);
             }
+            ptr::drop_in_place(result_mzd);
         }
         BinVector::from(result)
     }
@@ -369,6 +376,11 @@ impl<'a> ops::Mul<&'a BinMatrix> for &'a BinVector {
         let resultvob = (0..self.len())
             .map(|i| unsafe { mzd_read_bit(mzd, 0, i as Rci) == 1 })
             .collect::<Vob>();
+
+        unsafe {
+            ptr::drop_in_place(tmp);
+            ptr::drop_in_place(vec_mzd);
+        }
 
         BinVector::from(resultvob)
     }

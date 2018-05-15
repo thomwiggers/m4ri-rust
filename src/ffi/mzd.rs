@@ -95,7 +95,7 @@ extern "C" {
 
     /// Free a matrix created with mzd_init.
     /// Automatically done by the Deref trait on Mzd
-    fn mzd_free(matrix: *mut Mzd);
+    pub fn mzd_free(matrix: *mut Mzd);
 
     /// \brief Create a window/view into the matrix M.
     ///
@@ -326,6 +326,8 @@ mod test {
             let m2 = mzd_copy(ptr::null_mut(), matrix);
             mzd_randomize(m2);
             assert_eq!(mzd_equal(m2, matrix), 0);
+            ptr::drop_in_place(matrix);
+            ptr::drop_in_place(m2);
         }
     }
 
@@ -335,6 +337,7 @@ mod test {
             let matrix = mzd_init(10,10);
             mzd_set_ui(matrix, 0);
             mzd_first_row(matrix);
+            ptr::drop_in_place(matrix);
         }
     }
 
@@ -344,6 +347,7 @@ mod test {
             let matrix = mzd_init(10,10);
             mzd_set_ui(matrix, 0);
             mzd_row(matrix, 5);
+            ptr::drop_in_place(matrix);
         }
     }
 }
