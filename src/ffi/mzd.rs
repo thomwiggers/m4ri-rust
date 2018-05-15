@@ -260,8 +260,13 @@ pub unsafe fn mzd_read_bit(matrix: *const Mzd, row: Rci, col: Rci) -> BIT {
 /// Return a pointer to the first word of the first row
 #[inline]
 pub unsafe fn mzd_first_row(matrix: *const Mzd) -> *mut Word {
-    let result: *mut Word = (*(*matrix).blocks).begin.offset((*matrix).offset_vector as isize);
-    debug_assert!((*matrix).nrows == 0 || result == *(*matrix).rows, "Result is not the expected ptr");
+    let result: *mut Word = (*(*matrix).blocks)
+        .begin
+        .offset((*matrix).offset_vector as isize);
+    debug_assert!(
+        (*matrix).nrows == 0 || result == *(*matrix).rows,
+        "Result is not the expected ptr"
+    );
     result
 }
 
@@ -271,16 +276,23 @@ pub unsafe fn mzd_first_row(matrix: *const Mzd) -> *mut Word {
 /// Param row the row index
 #[inline]
 pub unsafe fn mzd_row(matrix: *const Mzd, row: Rci) -> *mut Word {
-    let big_vector: Wi = (*matrix).offset_vector +row * (*matrix).rowstride;
+    let big_vector: Wi = (*matrix).offset_vector + row * (*matrix).rowstride;
     let mut result: *mut Word = (*(*matrix).blocks).begin.offset(big_vector as isize);
 
     // FIXME __M4RI_UNLIKELY -> _builtin_expect
     if (*matrix).flags & MZD_FLAG_MULTIPLE_BLOCKS != 0 {
         let n = ((*matrix).row_offset + row) >> (*matrix).blockrows_log;
-        result = (*(*matrix).blocks.offset(n as isize)).begin.offset((big_vector - n * ((*(*matrix).blocks).size / ::std::mem::size_of::<Word>()) as i32) as isize);
+        result = (*(*matrix).blocks.offset(n as isize)).begin.offset(
+            (big_vector - n * ((*(*matrix).blocks).size / ::std::mem::size_of::<Word>()) as i32)
+                as isize,
+        );
     }
 
-    debug_assert_eq!(result, *(*matrix).rows.offset(row as isize), "Result is not the expected ptr");
+    debug_assert_eq!(
+        result,
+        *(*matrix).rows.offset(row as isize),
+        "Result is not the expected ptr"
+    );
     result
 }
 
@@ -295,7 +307,8 @@ pub unsafe fn mzd_is_windowed(m: *const Mzd) -> u8 {
 /// Test if this mzd_t should free blocks
 #[inline]
 pub unsafe fn mzd_owns_blocks(m: *const Mzd) -> bool {
-    !(*m).blocks.is_null() && (mzd_is_windowed(m) == 0 || (((*m).flags & MZD_FLAG_WINDOWED_OWNSBLOCKS != 0)))
+    !(*m).blocks.is_null()
+        && (mzd_is_windowed(m) == 0 || ((*m).flags & MZD_FLAG_WINDOWED_OWNSBLOCKS != 0))
 }
 
 impl Drop for Mzd {
@@ -334,7 +347,7 @@ mod test {
     #[test]
     fn test_mzd_first_row() {
         unsafe {
-            let matrix = mzd_init(10,10);
+            let matrix = mzd_init(10, 10);
             mzd_set_ui(matrix, 0);
             mzd_first_row(matrix);
             ptr::drop_in_place(matrix);
@@ -344,7 +357,7 @@ mod test {
     #[test]
     fn test_mzd_row() {
         unsafe {
-            let matrix = mzd_init(10,10);
+            let matrix = mzd_init(10, 10);
             mzd_set_ui(matrix, 0);
             mzd_row(matrix, 5);
             ptr::drop_in_place(matrix);
