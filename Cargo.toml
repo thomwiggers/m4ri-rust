@@ -17,3 +17,6 @@ rand = "^0.4.0"
 
 [profile.release]
 lto = true
+
+[features]
+system_alloc = []
