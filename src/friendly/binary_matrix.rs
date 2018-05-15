@@ -225,7 +225,7 @@ impl<'a> ops::Mul<&'a BinMatrix> for &'a BinMatrix {
     #[inline]
     fn mul(self, other: &BinMatrix) -> Self::Output {
         unsafe {
-            let mzd_ptr = mzd_mul(ptr::null_mut(), self.mzd.as_ptr(), other.mzd.as_ptr(), 0);
+            let mzd_ptr = mzd_mul_naive(ptr::null_mut(), self.mzd.as_ptr(), other.mzd.as_ptr());
 
             BinMatrix {
                 mzd: ptr::NonNull::new(mzd_ptr).expect("Multiplication failed"),
@@ -319,7 +319,7 @@ impl<'a> ops::Mul<&'a BinVector> for &'a BinMatrix {
 
         let mut result = Vob::with_capacity(other.len());
         unsafe {
-            let result_mzd = mzd_mul(ptr::null_mut(), self.mzd.as_ptr(), vec_mzd, 0);
+            let result_mzd = mzd_mul_naive(ptr::null_mut(), self.mzd.as_ptr(), vec_mzd);
             ptr::drop_in_place(vec_mzd);
             debug_assert_eq!(
                 (*result_mzd).ncols as usize,
@@ -368,13 +368,19 @@ impl<'a> ops::Mul<&'a BinMatrix> for &'a BinVector {
             }
         }
 
-        let tmp = unsafe { mzd_init(1, self.len() as Rci) };
+        let tmp = unsafe {
+            let tmp = mzd_init(1, self.len() as Rci);
+            _mzd_mul_va(tmp, vec_mzd, other.mzd.as_ptr(), 1)
+        };
 
-        let mzd = unsafe { _mzd_mul_va(tmp, vec_mzd, other.mzd.as_ptr(), 1) };
+        unsafe {
+            debug_assert_eq!((*tmp).nrows as usize, 1);
+            debug_assert_eq!((*tmp).ncols as usize, self.len());
+        }
 
         // FIXME can this be done faster.
         let resultvob = (0..self.len())
-            .map(|i| unsafe { mzd_read_bit(mzd, 0, i as Rci) == 1 })
+            .map(|i| unsafe { mzd_read_bit(tmp, 0, i as Rci) == 1 })
             .collect::<Vob>();
 
         unsafe {
