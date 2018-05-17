@@ -25,7 +25,6 @@ macro_rules! nonnull {
 }
 
 impl BinMatrix {
-
     /// Create a zero matrix
     pub fn zero(rows: usize, cols: usize) -> BinMatrix {
         if rows == 0 || cols == 0 {
@@ -199,14 +198,15 @@ impl BinMatrix {
 
     /// Get a certain bit
     pub fn bit(&self, row: usize, col: usize) -> bool {
-        let bit = unsafe {
-            mzd_read_bit(self.mzd.as_ptr(), row as Rci, col as Rci)
-        };
+        let bit = unsafe { mzd_read_bit(self.mzd.as_ptr(), row as Rci, col as Rci) };
         debug_assert!(bit == 0 || bit == 1, "Invalid bool for bit??");
         bit == 1
     }
 
     /// Set a window in the matrix to another matrix
+    ///
+    /// Currently does bit-by-bit, should use more optimal means
+    /// if alignment allows it
     pub fn set_window(&mut self, start_row: usize, start_col: usize, other: &BinMatrix) {
         let highr = start_row + other.nrows();
         let highc = start_col + other.ncols();
@@ -220,7 +220,8 @@ impl BinMatrix {
                 mzd_row_clear_offset(mzd_ptr, r as Rci, start_col as Rci);
             }
             for c in start_col..highc {
-                if other.bit(r-start_col, c-start_col) {
+                // FIXME speed problems
+                if other.bit(r - start_col, c - start_col) {
                     unsafe {
                         mzd_write_bit(mzd_ptr, r as Rci, c as Rci, 1);
                     }
@@ -339,7 +340,6 @@ impl<'a> ops::Mul<&'a BinVector> for &'a BinMatrix {
         );
 
         (self * &other.as_column_matrix()).as_vector()
-
     }
 }
 
@@ -360,7 +360,12 @@ impl<'a> ops::Mul<&'a BinMatrix> for &'a BinVector {
         let vec_mzd = self.as_matrix();
         let tmp = unsafe {
             let tmp = mzd_init(1, self.len() as Rci);
-            BinMatrix::from_mzd(_mzd_mul_va(tmp, vec_mzd.mzd.as_ptr(), other.mzd.as_ptr(), 1))
+            BinMatrix::from_mzd(_mzd_mul_va(
+                tmp,
+                vec_mzd.mzd.as_ptr(),
+                other.mzd.as_ptr(),
+                1,
+            ))
         };
 
         debug_assert_eq!(tmp.nrows(), 1);
