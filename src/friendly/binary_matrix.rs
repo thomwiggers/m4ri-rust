@@ -196,6 +196,15 @@ impl BinMatrix {
             b
         }
     }
+
+    /// Get a certain bit
+    pub fn bit(&self, row: usize, col: usize) -> bool {
+        let bit = unsafe {
+            mzd_read_bit(self.mzd.as_ptr(), row as Rci, col as Rci)
+        };
+        debug_assert!(bit == 0 || bit == 1, "Invalid bool for bit??");
+        bit == 1
+    }
 }
 
 impl cmp::PartialEq for BinMatrix {
@@ -466,5 +475,15 @@ mod test {
         let vec = m1.as_vector();
         assert_eq!(vec.len(), 10);
         assert!(m1 == vec.as_column_matrix());
+    }
+
+    #[test]
+    fn zero() {
+        let m1 = BinMatrix::zero(10, 3);
+        for i in 0..10 {
+            for j in 0..3 {
+                assert_eq!(m1.bit(i, j), false);
+            }
+        }
     }
 }
