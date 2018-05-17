@@ -25,6 +25,16 @@ macro_rules! nonnull {
 }
 
 impl BinMatrix {
+
+    /// Create a zero matrix
+    pub fn zero(rows: usize, cols: usize) -> BinMatrix {
+        if rows == 0 || cols == 0 {
+            panic!("Can't create a 0 matrix");
+        }
+        let mzd = unsafe { nonnull!(mzd_init(rows as c_int, cols as c_int)) };
+        BinMatrix { mzd }
+    }
+
     /// Create a new matrix
     pub fn new(rows: Vec<BinVector>) -> BinMatrix {
         if rows.len() == 0 {
