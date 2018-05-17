@@ -111,7 +111,7 @@ extern "C" {
     ///
     /// \param M Matrix
     /// \param lowr Starting row (inclusive)
-    /// \param lowc Starting column (inclusive, must be multiple of m4ri_radix)
+    /// \param lowc Starting column (inclusive, **must be multiple of m4ri_radix**)
     /// \param highr End row (exclusive)
     /// \param highc End column (exclusive)
     pub fn mzd_init_window(
@@ -131,9 +131,6 @@ extern "C" {
         highc: Rci,
     ) -> *const Mzd;
 
-    /// Free a matrix window created with mzd_init_window
-    pub fn mzd_free_window(matrix: *mut Mzd);
-
     /// Swap the two rows rowa and rowb
     pub fn mzd_row_swap(matrix: *mut Mzd, rowa: Rci, rowb: Rci);
 
@@ -146,7 +143,7 @@ extern "C" {
     /// \param i Target row index.
     /// \param A Source matrix.
     /// \param j Source row index.
-    pub fn mzd_copy_row(b: *mut Mzd, a: *const Mzd, j: Rci);
+    pub fn mzd_copy_row(b: *mut Mzd, i: Rci, a: *const Mzd, j: Rci);
 
     /// Swap the two columns cola and colb
     pub fn mzd_col_swap(matrix: *mut Mzd, cola: Rci, colb: Rci);
@@ -223,6 +220,14 @@ extern "C" {
 
     /// Zero test for matrix
     pub fn mzd_is_zero(a: *const Mzd);
+
+
+    /// Clear the given row, but only begins at the column coloffset.
+    ///
+    /// param M Matrix
+    /// param row Index of row
+    /// param coloffset Column offset
+    pub fn mzd_row_clear_offset(m: *mut Mzd, row: Rci, coloffset: Rci);
 
 }
 
@@ -312,11 +317,20 @@ pub unsafe fn mzd_owns_blocks(m: *const Mzd) -> bool {
 }
 
 impl Drop for Mzd {
+    #[inline]
     fn drop(&mut self) {
         unsafe {
             mzd_free(self);
         }
     }
+}
+
+/// Free a matrix window created with mzd_init_window
+///
+/// This is actually just `mzd_free` so call `ptr::drop_in_place` instead
+#[inline]
+pub unsafe fn mzd_free_window(matrix: *mut Mzd) {
+    mzd_free(matrix);
 }
 
 #[cfg(test)]

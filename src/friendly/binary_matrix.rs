@@ -205,6 +205,29 @@ impl BinMatrix {
         debug_assert!(bit == 0 || bit == 1, "Invalid bool for bit??");
         bit == 1
     }
+
+    /// Set a window in the matrix to another matrix
+    pub fn set_window(&mut self, start_row: usize, start_col: usize, other: &BinMatrix) {
+        let highr = start_row + other.nrows();
+        let highc = start_col + other.ncols();
+        debug_assert!(self.ncols() >= highc, "This matrix is too small!");
+        debug_assert!(self.nrows() >= highr, "This matrix has too few rows !");
+        let mzd_ptr = self.mzd.as_ptr();
+
+        for r in start_row..highr {
+            // clear the bits
+            unsafe {
+                mzd_row_clear_offset(mzd_ptr, r as Rci, start_col as Rci);
+            }
+            for c in start_col..highc {
+                if other.bit(r-start_col, c-start_col) {
+                    unsafe {
+                        mzd_write_bit(mzd_ptr, r as Rci, c as Rci, 1);
+                    }
+                }
+            }
+        }
+    }
 }
 
 impl cmp::PartialEq for BinMatrix {
@@ -439,6 +462,7 @@ mod test {
         unsafe {
             assert!(mzd_equal(id.mzd.as_ptr(), id_gen.mzd.as_ptr()) != 0);
         }
+        assert_eq!(id, id_gen);
     }
 
     #[test]
@@ -483,6 +507,23 @@ mod test {
         for i in 0..10 {
             for j in 0..3 {
                 assert_eq!(m1.bit(i, j), false);
+            }
+        }
+    }
+
+    #[test]
+    fn set_window() {
+        let mut m1 = BinMatrix::zero(10, 10);
+        m1.set_window(5, 5, &BinMatrix::identity(5));
+        for i in 0..5 {
+            for j in 0..5 {
+                assert_eq!(m1.bit(i, j), false);
+            }
+        }
+        for i in 5..10 {
+            for j in 5..10 {
+                let bit = m1.bit(i, j);
+                assert_eq!(bit, i == j, "bit ({},{}) was {}", i, j, bit);
             }
         }
     }
