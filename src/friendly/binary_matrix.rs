@@ -51,7 +51,11 @@ impl BinMatrix {
         for (row_index, row) in rows.into_iter().enumerate() {
             let row_ptr: *const *mut Word = unsafe { (*mzd_ptr).rows.offset(row_index as isize) };
             for (block_index, row_block) in row.iter_storage().enumerate() {
-                assert_eq!(::std::mem::size_of::<usize>(), ::std::mem::size_of::<u64>(), "only works on 64 bit");
+                assert_eq!(
+                    ::std::mem::size_of::<usize>(),
+                    ::std::mem::size_of::<u64>(),
+                    "only works on 64 bit"
+                );
                 unsafe {
                     *((*row_ptr).offset(block_index as isize)) = row_block as u64;
                 }
@@ -180,17 +184,19 @@ impl BinMatrix {
             assert_eq!(self.nrows(), 1, "needs to have only one column or row");
             let mut bits = BinVector::with_capacity(self.ncols());
             {
-                let collector: &mut Vec<usize> = unsafe {bits.get_storage_mut() };
-                for i in 0..(self.ncols()/64) {
+                let collector: &mut Vec<usize> = unsafe { bits.get_storage_mut() };
+                for i in 0..(self.ncols() / 64) {
                     println!("processing big block");
                     let row_ptr: *const *mut Word = unsafe { (*self.mzd.as_ptr()).rows };
-                    let word_ptr: *const Word = unsafe { ((*row_ptr) as *const Word).offset(i as isize) };
+                    let word_ptr: *const Word =
+                        unsafe { ((*row_ptr) as *const Word).offset(i as isize) };
                     collector.push(unsafe { *word_ptr as usize });
                 }
                 // process last block
                 if self.ncols() % 64 != 0 {
                     let row_ptr: *const *mut Word = unsafe { (*self.mzd.as_ptr()).rows };
-                    let word_ptr: *const Word = unsafe { (*row_ptr).offset((self.ncols() as isize - 1) / 64) };
+                    let word_ptr: *const Word =
+                        unsafe { (*row_ptr).offset((self.ncols() as isize - 1) / 64) };
                     let word = unsafe { *word_ptr };
                     collector.push(word as usize);
                 }
@@ -525,7 +531,6 @@ mod test {
             assert!(m1 == vec.as_matrix());
         }
     }
-
 
     #[test]
     fn zero() {

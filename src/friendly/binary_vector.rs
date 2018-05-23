@@ -113,7 +113,6 @@ impl BinVector {
         self.as_matrix().transpose()
     }
 
-
     pub fn as_u32(&self) -> u32 {
         assert!(self.len() < 32, "Can't convert this to a >32 bit number");
         if let Some(i) = self.iter_storage().next() {

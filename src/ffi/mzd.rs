@@ -63,7 +63,10 @@ pub struct Mzd {
     blockrows_log: u8,
 
     // Ensures sizeof(mzd_t) == 64
-    padding: [u8; 62 - 2 * size_of::<Rci>() - 4 * size_of::<Wi>() - size_of::<Word>()
+    padding: [u8; 62
+        - 2 * size_of::<Rci>()
+        - 4 * size_of::<Wi>()
+        - size_of::<Word>()
         - 2 * size_of::<*const libc::c_void>()],
 
     /// Mask for valid bits in the word with the highest index (width - 1)
@@ -220,7 +223,6 @@ extern "C" {
 
     /// Zero test for matrix
     pub fn mzd_is_zero(a: *const Mzd);
-
 
     /// Clear the given row, but only begins at the column coloffset.
     ///
