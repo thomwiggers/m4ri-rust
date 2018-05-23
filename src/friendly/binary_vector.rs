@@ -288,4 +288,13 @@ mod test {
         assert_eq!(amat.as_vector(), a);
     }
 
+    #[test]
+    fn count_ones() {
+        let a = BinVector::from_elem(10, true);
+        let b = BinVector::from_elem(10, false);
+        assert_eq!(a.count_ones(), 10);
+        assert_eq!(b.count_ones(), 0);
+        assert_eq!(BinVector::from_bytes(&[0b10101000]).count_ones(), 3);
+    }
+
 }

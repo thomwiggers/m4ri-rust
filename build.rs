@@ -20,6 +20,7 @@ fn main() {
 
         let status = Command::new("./configure")
             .arg("--enable-static")
+            .arg("--enable-thread-safe")
             .env("CFLAGS", "-O3 -fPIC")
             .current_dir("vendor/m4ri")
             .status()
