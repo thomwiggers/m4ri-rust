@@ -222,7 +222,7 @@ impl BinMatrix {
             }
             for c in start_col..highc {
                 // FIXME speed problems
-                if other.bit(r - start_col, c - start_col) {
+                if other.bit(r - start_row, c - start_col) {
                     unsafe {
                         mzd_write_bit(mzd_ptr, r as Rci, c as Rci, 1);
                     }
