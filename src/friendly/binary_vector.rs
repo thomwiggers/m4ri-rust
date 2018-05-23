@@ -91,13 +91,7 @@ impl BinVector {
     /// Create a new BinVector from an `&[u8]`.
     #[inline]
     pub fn from_bytes(bytes: &[u8]) -> BinVector {
-        let mut vec = Vob::with_capacity(bytes.len());
-        // TODO Speed this up
-        for byte in bytes {
-            for i in (0..8).rev() {
-                vec.push(byte >> i & 1u8 == 1u8);
-            }
-        }
+        let vec: Vob = Vob::from_bytes(bytes);
 
         BinVector { vec }
     }
@@ -247,6 +241,10 @@ mod test {
     fn from_bytes() {
         let b = BinVector::from_bytes(&[0b11111111]);
         assert_eq!(b.len(), 8);
+
+        let b = BinVector::from_bytes(&[0b10000000]);
+        assert_eq!(b.get(0), Some(true));
+        assert_eq!(b.get(1), Some(false));
     }
 
     #[test]
