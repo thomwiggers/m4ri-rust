@@ -7,8 +7,6 @@ use vob::Vob;
 use rand;
 use rand::Rng;
 
-use ffi::*;
-
 use friendly::binary_matrix::BinMatrix;
 
 /// Wrapper around BitVec
@@ -108,36 +106,13 @@ impl BinVector {
     }
 
     pub fn as_matrix(&self) -> BinMatrix {
-        let mzd_ptr = unsafe { mzd_init(1, self.len() as ::libc::c_int) };
-        unsafe {
-            debug_assert_eq!((*mzd_ptr).ncols as usize, self.len());
-            debug_assert_eq!((*mzd_ptr).nrows, 1);
-        }
-
-        // can we do this faster?
-        // Yes we can, but it's a bit scary.
-        // FIXME
-        for (column_index, bit) in self.iter().enumerate() {
-            unsafe {
-                mzd_write_bit(mzd_ptr, 0, column_index as ::libc::c_int, bit as BIT);
-            }
-        }
-        BinMatrix::from_mzd(mzd_ptr)
+        BinMatrix::new(vec![self.clone()])
     }
 
     pub fn as_column_matrix(&self) -> BinMatrix {
-        let mzd_ptr = unsafe { mzd_init(self.len() as ::libc::c_int, 1) };
-
-        // can we do this faster?
-        // Yes we can, but it's a bit scary.
-        // FIXME
-        for (row_index, bit) in self.iter().enumerate() {
-            unsafe {
-                mzd_write_bit(mzd_ptr, row_index as ::libc::c_int, 0, bit as BIT);
-            }
-        }
-        BinMatrix::from_mzd(mzd_ptr)
+        self.as_matrix().transpose()
     }
+
 
     pub fn as_u32(&self) -> u32 {
         assert!(self.len() < 32, "Can't convert this to a >32 bit number");
@@ -296,5 +271,4 @@ mod test {
         assert_eq!(b.count_ones(), 0);
         assert_eq!(BinVector::from_bytes(&[0b10101000]).count_ones(), 3);
     }
-
 }

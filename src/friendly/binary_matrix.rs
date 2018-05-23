@@ -47,18 +47,13 @@ impl BinMatrix {
         }
         let mzd_ptr = unsafe { mzd_init(rows.len() as c_int, rows[0].len() as c_int) };
 
-        // can we do this faster?
-        // Yes we can, but it's a bit scary.
-        // FIXME
+        // Directly write to the underlying Mzd storage
         for (row_index, row) in rows.into_iter().enumerate() {
-            for (column_index, bit) in row.into_iter().enumerate() {
+            let row_ptr: *const *mut Word = unsafe { (*mzd_ptr).rows.offset(row_index as isize) };
+            for (block_index, row_block) in row.iter_storage().enumerate() {
+                assert_eq!(::std::mem::size_of::<usize>(), ::std::mem::size_of::<u64>(), "only works on 64 bit");
                 unsafe {
-                    mzd_write_bit(
-                        mzd_ptr,
-                        row_index as c_int,
-                        column_index as c_int,
-                        bit as BIT,
-                    );
+                    *((*row_ptr).offset(block_index as isize)) = row_block as u64;
                 }
             }
         }
@@ -180,20 +175,32 @@ impl BinMatrix {
     pub fn as_vector(&self) -> BinVector {
         if self.nrows() != 1 {
             assert_eq!(self.ncols(), 1, "needs to have only one column or row");
-            let mut b = BinVector::with_capacity(self.ncols());
-            for i in 0..self.nrows() {
-                let bit = unsafe { mzd_read_bit(self.mzd.as_ptr(), i as Rci, 0) == 1 };
-                b.push(bit);
-            }
-            b
+            self.transpose().as_vector()
         } else {
             assert_eq!(self.nrows(), 1, "needs to have only one column or row");
-            let mut b = BinVector::with_capacity(self.ncols());
-            for i in 0..self.ncols() {
-                let bit = unsafe { mzd_read_bit(self.mzd.as_ptr(), 0, i as Rci) == 1 };
-                b.push(bit);
+            let mut bits = BinVector::with_capacity(self.ncols());
+            {
+                let collector: &mut Vec<usize> = unsafe {bits.get_storage_mut() };
+                for i in 0..(self.ncols()/64) {
+                    println!("processing big block");
+                    let row_ptr: *const *mut Word = unsafe { (*self.mzd.as_ptr()).rows };
+                    let word_ptr: *const Word = unsafe { ((*row_ptr) as *const Word).offset(i as isize) };
+                    collector.push(unsafe { *word_ptr as usize });
+                }
+                // process last block
+                if self.ncols() % 64 != 0 {
+                    let row_ptr: *const *mut Word = unsafe { (*self.mzd.as_ptr()).rows };
+                    let word_ptr: *const Word = unsafe { (*row_ptr).offset((self.ncols() as isize - 1) / 64) };
+                    let word = unsafe { *word_ptr };
+                    collector.push(word as usize);
+                }
             }
-            b
+            unsafe {
+                bits.set_len(self.ncols());
+                bits.mask_last_block();
+            }
+
+            bits
         }
     }
 
@@ -500,12 +507,25 @@ mod test {
     }
 
     #[test]
-    fn test_as_vector() {
-        let m1 = BinMatrix::random(10, 1);
-        let vec = m1.as_vector();
-        assert_eq!(vec.len(), 10);
-        assert!(m1 == vec.as_column_matrix());
+    fn test_as_vector_column() {
+        for i in 1..25 {
+            let m1 = BinMatrix::random(i, 1);
+            let vec = m1.as_vector();
+            assert_eq!(vec.len(), i);
+            assert!(m1 == vec.as_column_matrix());
+        }
     }
+
+    #[test]
+    fn test_as_vector_row() {
+        for i in 1..25 {
+            let m1 = BinMatrix::random(1, i);
+            let vec = m1.as_vector();
+            assert_eq!(vec.len(), i);
+            assert!(m1 == vec.as_matrix());
+        }
+    }
+
 
     #[test]
     fn zero() {

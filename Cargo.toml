@@ -12,8 +12,11 @@ maintenance = { status = "experimental" }
 
 [dependencies]
 libc = "^0.2"
-vob  = "^1.2.0"
 rand = "^0.4.0"
+
+[dependencies.vob]
+git = "https://github.com/thomwiggers/vob.git"
+branch = "storage_mut"
 
 [profile.release]
 lto = true
