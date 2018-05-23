@@ -99,6 +99,7 @@ impl BinMatrix {
     ///  [A] [B] => [A B]
     #[inline]
     pub fn augmented(&self, other: &BinMatrix) -> BinMatrix {
+        debug_assert_eq!(self.nrows(), other.nrows(), "The rows need to be equal");
         let mzd = unsafe {
             nonnull!(mzd_concat(
                 ptr::null_mut(),
