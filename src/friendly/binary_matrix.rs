@@ -372,18 +372,7 @@ impl<'a> ops::Mul<&'a BinMatrix> for &'a BinVector {
     /// computes v^T * A
     fn mul(self, other: &BinMatrix) -> Self::Output {
         let vec_mzd = self.as_matrix();
-        let tmp = unsafe {
-            let tmp = mzd_init(1, self.len() as Rci);
-            BinMatrix::from_mzd(mzd_mul(
-                tmp,
-                vec_mzd.mzd.as_ptr(),
-                other.mzd.as_ptr(),
-                1,
-            ))
-        };
-
-        debug_assert_eq!(tmp.nrows(), 1);
-        debug_assert_eq!(tmp.ncols(), self.len());
+        let tmp = &vec_mzd * other;
 
         tmp.as_vector()
     }
@@ -505,6 +494,10 @@ mod test {
 
         let result: BinVector = &binvec * &m1;
         assert_eq!(result, binvec);
+
+        let m1 = BinMatrix::random(10, 3);
+        let result = &binvec * &m1;
+        assert_eq!(result.len(), 3);
     }
 
     #[test]
