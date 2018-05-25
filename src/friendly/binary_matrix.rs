@@ -218,7 +218,7 @@ impl BinMatrix {
     }
 
     /// Get a window from the matrix
-    pub fn get_window(&self, start_row: usize, start_col: usize,
+    pub fn get_window(&mut self, start_row: usize, start_col: usize,
                       high_row: usize, high_col: usize) -> BinMatrix {
         BinMatrix::from_mzd(unsafe {
             mzd_init_window(self.mzd.as_ptr(), start_row as Rci, start_col as Rci,
