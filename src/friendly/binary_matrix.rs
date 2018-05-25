@@ -219,22 +219,26 @@ impl BinMatrix {
 
     /// Get a window from the matrix
     pub fn get_window(
-        &mut self,
+        &self,
         start_row: usize,
         start_col: usize,
         high_row: usize,
         high_col: usize,
     ) -> BinMatrix {
-        BinMatrix::from_mzd(unsafe {
-            mzd_init_window(
-                self.mzd.as_ptr(),
-                start_row as Rci,
-                start_col as Rci,
-                high_row as Rci,
-                high_col as Rci,
-            )
-        })
+        let (rows, cols) = (high_row - start_row, high_col - start_col);
+        let mzd_ptr = unsafe { mzd_init(rows as Rci, cols as Rci) };
+        for (r, i) in (start_row..high_row).enumerate() {
+            // FIXME speed
+            for (c, j) in (start_col..high_col).enumerate() {
+                let bit = self.bit(i, j);
+                unsafe {
+                    mzd_write_bit(mzd_ptr, r as Rci, c as Rci, bit as BIT);
+                }
+            }
+        }
+        BinMatrix::from_mzd(mzd_ptr)
     }
+
 
     /// Set a window in the matrix to another matrix
     ///
