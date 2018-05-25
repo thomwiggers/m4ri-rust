@@ -218,11 +218,21 @@ impl BinMatrix {
     }
 
     /// Get a window from the matrix
-    pub fn get_window(&mut self, start_row: usize, start_col: usize,
-                      high_row: usize, high_col: usize) -> BinMatrix {
+    pub fn get_window(
+        &mut self,
+        start_row: usize,
+        start_col: usize,
+        high_row: usize,
+        high_col: usize,
+    ) -> BinMatrix {
         BinMatrix::from_mzd(unsafe {
-            mzd_init_window(self.mzd.as_ptr(), start_row as Rci, start_col as Rci,
-            high_row as Rci, high_col as Rci)
+            mzd_init_window(
+                self.mzd.as_ptr(),
+                start_row as Rci,
+                start_col as Rci,
+                high_row as Rci,
+                high_col as Rci,
+            )
         })
     }
 
@@ -238,16 +248,10 @@ impl BinMatrix {
         let mzd_ptr = self.mzd.as_ptr();
 
         for r in start_row..highr {
-            // clear the bits
-            unsafe {
-                mzd_row_clear_offset(mzd_ptr, r as Rci, start_col as Rci);
-            }
             for c in start_col..highc {
-                // FIXME speed problems
-                if other.bit(r - start_row, c - start_col) {
-                    unsafe {
-                        mzd_write_bit(mzd_ptr, r as Rci, c as Rci, 1);
-                    }
+                let bit = other.bit(r - start_row, c - start_col);
+                unsafe {
+                    mzd_write_bit(mzd_ptr, r as Rci, c as Rci, bit as BIT);
                 }
             }
         }
@@ -553,6 +557,15 @@ mod test {
                 assert_eq!(m1.bit(i, j), false);
             }
         }
+        for i in 5..10 {
+            for j in 5..10 {
+                let bit = m1.bit(i, j);
+                assert_eq!(bit, i == j, "bit ({},{}) was {}", i, j, bit);
+            }
+        }
+
+        let mut m1 = BinMatrix::random(10, 10);
+        m1.set_window(5, 5, &BinMatrix::identity(5));
         for i in 5..10 {
             for j in 5..10 {
                 let bit = m1.bit(i, j);

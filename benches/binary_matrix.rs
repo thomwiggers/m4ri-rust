@@ -41,17 +41,15 @@ mod benchmarks {
         b.iter(|| &m * &v);
     }
 
-
-
     macro_rules! multiply {
-        ($id: ident, $a: tt, $b: tt, $d: tt) => {
+        ($id:ident, $a:tt, $b:tt, $d:tt) => {
             #[bench]
             fn $id(b: &mut Bencher) {
                 let m1 = BinMatrix::random($a, $b);
                 let m2 = BinMatrix::random($b, $d);
                 b.iter(|| &m1 * &m2);
             }
-        }
+        };
     }
 
     multiply!(matrix_multiply_10x10_10x10, 10, 10, 10);
