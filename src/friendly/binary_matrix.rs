@@ -374,7 +374,7 @@ impl<'a> ops::Mul<&'a BinMatrix> for &'a BinVector {
         let vec_mzd = self.as_matrix();
         let tmp = unsafe {
             let tmp = mzd_init(1, self.len() as Rci);
-            BinMatrix::from_mzd(_mzd_mul_va(
+            BinMatrix::from_mzd(mzd_mul(
                 tmp,
                 vec_mzd.mzd.as_ptr(),
                 other.mzd.as_ptr(),
