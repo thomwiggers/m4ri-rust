@@ -16,7 +16,7 @@ rand = "^0.4.0"
 
 [dependencies.vob]
 git = "https://github.com/thomwiggers/vob.git"
-branch = "storage_mut"
+branch = "fast_version"
 
 [profile.release]
 opt-level = 3

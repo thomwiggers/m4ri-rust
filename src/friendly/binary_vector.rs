@@ -101,6 +101,11 @@ impl BinVector {
     }
 
     #[inline]
+    pub fn extend_from_binvec(&mut self, other: &BinVector) {
+        self.vec.extend_from_vob(&other.vec);
+    }
+
+    #[inline]
     pub fn to_vob(self) -> Vob {
         self.vec
     }
