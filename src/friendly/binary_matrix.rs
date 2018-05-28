@@ -371,8 +371,12 @@ impl<'a> ops::Mul<&'a BinVector> for &'a BinMatrix {
             self.ncols(),
             other.len()
         );
+        let other_mat = other.as_matrix();
+        let result_dest = unsafe{ mzd_init(self.nrows() as Rci, 1) };
+        let result = unsafe { _mzd_mul_naive(result_dest, self.mzd.as_ptr(), other_mat.mzd.as_ptr(), 0) };
+        let matresult = BinMatrix::from_mzd(result);
 
-        (self * &other.as_column_matrix()).as_vector()
+        matresult.as_vector()
     }
 }
 

@@ -159,6 +159,19 @@ extern "C" {
     /// the first argument may be null for automatic creation
     pub fn mzd_mul_naive(dest: *mut Mzd, a: *const Mzd, b: *const Mzd) -> *mut Mzd;
 
+    ///
+    /// brief Naive cubic matrix multiplication with the pre-transposed B.
+    ///
+    /// That is, compute C such that C == AB^t.
+    ///
+    /// param C Preallocated product matrix.
+    /// param A Input matrix A.
+    /// param B Pre-transposed input matrix B.
+    /// param clear Whether to clear C before accumulating AB
+    pub fn _mzd_mul_naive(dest: *mut Mzd, a: *const Mzd, b: *const Mzd, clear: libc::c_int) -> *mut Mzd;
+
+
+
     /// naive cubic matrix multiplication and addition
     ///
     /// C == C + AB
