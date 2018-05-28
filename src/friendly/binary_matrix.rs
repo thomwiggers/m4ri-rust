@@ -12,6 +12,8 @@ pub struct BinMatrix {
     mzd: ptr::NonNull<Mzd>,
 }
 
+unsafe impl Sync for BinMatrix {}
+
 impl ops::Drop for BinMatrix {
     fn drop(&mut self) {
         unsafe { ptr::drop_in_place(self.mzd.as_ptr()) }
