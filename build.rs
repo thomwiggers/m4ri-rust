@@ -21,7 +21,9 @@ fn main() {
         let status = Command::new("./configure")
             .arg("--enable-static")
             .arg("--enable-thread-safe")
+            .arg("--disable-png")
             .env("CFLAGS", "-O3 -fPIC")
+            .env("CC", "clang")
             .current_dir("vendor/m4ri")
             .status()
             .expect("Failed to execute configure");

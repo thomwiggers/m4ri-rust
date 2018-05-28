@@ -19,6 +19,7 @@ git = "https://github.com/thomwiggers/vob.git"
 branch = "storage_mut"
 
 [profile.release]
+opt-level = 3
 lto = true
 
 [features]
