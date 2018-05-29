@@ -188,7 +188,6 @@ impl BinMatrix {
             {
                 let collector: &mut Vec<usize> = unsafe { bits.get_storage_mut() };
                 for i in 0..(self.ncols() / 64) {
-                    println!("processing big block");
                     let row_ptr: *const *mut Word = unsafe { (*self.mzd.as_ptr()).rows };
                     let word_ptr: *const Word =
                         unsafe { ((*row_ptr) as *const Word).offset(i as isize) };
