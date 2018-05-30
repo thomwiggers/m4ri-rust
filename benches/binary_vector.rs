@@ -25,4 +25,5 @@ mod benchmarks {
         let v1 = BinVector::random(1000);
         b.iter(|| v1.as_matrix())
     }
+
 }

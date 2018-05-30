@@ -10,7 +10,7 @@ use rand::Rng;
 use friendly::binary_matrix::BinMatrix;
 
 /// Wrapper around BitVec
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct BinVector {
     vec: Vob,
 }

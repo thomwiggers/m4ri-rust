@@ -582,4 +582,14 @@ mod test {
             }
         }
     }
+
+    #[test]
+    fn memory_leaks() {
+        for _ in 0..100000 {
+            let v = BinVector::random(1000);
+            let m = BinMatrix::identity(1000);
+            let _i = m * v;
+        }
+    }
+
 }
