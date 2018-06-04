@@ -8,7 +8,7 @@ before_script:
   - rustup component add rustfmt-preview
 
 script:
-  - "[ '$TRAVIS_RUST_VERSION' != 'nightly' ] || cargo fmt --all -- --write-mode diff"
+  - "[ '$TRAVIS_RUST_VERSION' != 'nightly' ] || cargo fmt --all -- --check"
   - cargo build --all
   - cargo test --all
 
