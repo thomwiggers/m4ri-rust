@@ -115,7 +115,7 @@ impl BinVector {
     }
 
     pub fn as_column_matrix(&self) -> BinMatrix {
-        self.as_matrix().transpose()
+        self.as_matrix().transposed()
     }
 
     pub fn as_u32(&self) -> u32 {

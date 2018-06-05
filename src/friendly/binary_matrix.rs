@@ -150,13 +150,18 @@ impl BinMatrix {
 
     /// Compute the transpose of the matrix
     #[inline]
-    pub fn transpose(&self) -> BinMatrix {
+    pub fn transposed(&self) -> BinMatrix {
         let mzd;
         unsafe {
             let mzd_ptr = mzd_transpose(ptr::null_mut(), self.mzd.as_ptr());
             mzd = nonnull!(mzd_ptr);
         }
         BinMatrix { mzd }
+    }
+
+    #[deprecated]
+    pub fn transpose(&self) -> BinMatrix {
+        self.transposed()
     }
 
     /// Get the number of rows
@@ -181,7 +186,7 @@ impl BinMatrix {
     pub fn as_vector(&self) -> BinVector {
         if self.nrows() != 1 {
             assert_eq!(self.ncols(), 1, "needs to have only one column or row");
-            self.transpose().as_vector()
+            self.transposed().as_vector()
         } else {
             assert_eq!(self.nrows(), 1, "needs to have only one column or row");
             let mut bits = BinVector::with_capacity(self.ncols());
@@ -582,14 +587,4 @@ mod test {
             }
         }
     }
-
-    #[test]
-    fn memory_leaks() {
-        for _ in 0..100000 {
-            let v = BinVector::random(1000);
-            let m = BinMatrix::identity(1000);
-            let _i = m * v;
-        }
-    }
-
 }
