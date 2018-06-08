@@ -118,21 +118,20 @@ impl BinVector {
         self.as_matrix().transposed()
     }
 
+    /// Get an u32 in the order as it's stored
     pub fn as_u32(&self) -> u32 {
         assert!(self.len() < 32, "Can't convert this to a >32 bit number");
-        if let Some(i) = self.iter_storage().next() {
-            i as u32
-        } else {
-            0
-        }
+        self.iter_storage()
+            .next()
+            .expect("Can't convert None to a number") as u32
     }
+
+    /// Get an u64 in the order as it's stored
     pub fn as_u64(&self) -> u64 {
         assert!(self.len() < 64, "Can't convert this to a >32 bit number");
-        if let Some(i) = self.iter_storage().next() {
-            i as u64
-        } else {
-            0
-        }
+        self.iter_storage()
+            .next()
+            .expect("Can't convert None to a number") as u64
     }
 }
 
@@ -193,6 +192,7 @@ impl ops::Mul<BinVector> for BinVector {
     type Output = bool;
 
     #[inline]
+    /// Compute the inner product between two vectors
     fn mul(self, other: BinVector) -> Self::Output {
         let mut vec = self.clone();
         vec.and(&other);

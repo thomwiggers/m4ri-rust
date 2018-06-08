@@ -26,6 +26,45 @@ macro_rules! nonnull {
     };
 }
 
+#[cfg(all(feature = "m4rm_mul", not(any(feature = "strassen_mul", feature = "naive_mul"))))]
+macro_rules! mul_impl {
+    ($dest:expr, $a:expr, $b:expr) => {
+        mzd_mul_m4rm($dest, $a, $b, 0)
+    };
+}
+
+#[cfg(
+    any(
+        all(feature = "strassen_mul", not(any(feature = "m4rm_mul", feature = "naive_mul"))),
+        not(any(feature = "strassen_mul", feature = "m4rm_mul", feature = "naive_mul"))
+    )
+)]
+macro_rules! mul_impl {
+    ($dest:expr, $a:expr, $b:expr) => {
+        mzd_mul($dest, $a, $b, 0)
+    };
+}
+
+#[cfg(all(feature = "naive_mul", not(any(feature = "m4rm_mul", feature = "strassen_mul"))))]
+macro_rules! mul_impl {
+    ($dest:expr, $a:expr, $b:expr) => {
+        mzd_mul_naive($dest, $a, $b)
+    };
+}
+
+#[cfg(
+    any(
+        all(feature = "naive_mul", feature = "m4rm_mul"),
+        all(feature = "strassen_mul", feature = "naive_mul"),
+        all(feature = "m4rm_mul", feature = "strassen_mul")
+    )
+)]
+macro_rules! mul_impl {
+    ($($a:expr),*) => {
+        compile_error!("You need to set only one of the feature flags as mul strategy")
+    };
+}
+
 impl BinMatrix {
     /// Create a zero matrix
     pub fn zero(rows: usize, cols: usize) -> BinMatrix {
@@ -245,7 +284,6 @@ impl BinMatrix {
         BinMatrix::from_mzd(mzd_ptr)
     }
 
-
     /// Set a window in the matrix to another matrix
     ///
     /// Currently does bit-by-bit, should use more optimal means
@@ -299,7 +337,7 @@ impl<'a> ops::Mul<&'a BinMatrix> for &'a BinMatrix {
     #[inline]
     fn mul(self, other: &BinMatrix) -> Self::Output {
         unsafe {
-            let mzd_ptr = mzd_mul(ptr::null_mut(), self.mzd.as_ptr(), other.mzd.as_ptr(), 0);
+            let mzd_ptr = mul_impl!(ptr::null_mut(), self.mzd.as_ptr(), other.mzd.as_ptr());
 
             BinMatrix {
                 mzd: ptr::NonNull::new(mzd_ptr).expect("Multiplication failed"),
@@ -376,8 +414,9 @@ impl<'a> ops::Mul<&'a BinVector> for &'a BinMatrix {
             other.len()
         );
         let other_mat = other.as_matrix();
-        let result_dest = unsafe{ mzd_init(self.nrows() as Rci, 1) };
-        let result = unsafe { _mzd_mul_naive(result_dest, self.mzd.as_ptr(), other_mat.mzd.as_ptr(), 0) };
+        let result_dest = unsafe { mzd_init(self.nrows() as Rci, 1) };
+        let result =
+            unsafe { _mzd_mul_naive(result_dest, self.mzd.as_ptr(), other_mat.mzd.as_ptr(), 0) };
         let matresult = BinMatrix::from_mzd(result);
 
         matresult.as_vector()

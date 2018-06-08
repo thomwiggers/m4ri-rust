@@ -168,9 +168,12 @@ extern "C" {
     /// param A Input matrix A.
     /// param B Pre-transposed input matrix B.
     /// param clear Whether to clear C before accumulating AB
-    pub fn _mzd_mul_naive(dest: *mut Mzd, a: *const Mzd, b: *const Mzd, clear: libc::c_int) -> *mut Mzd;
-
-
+    pub fn _mzd_mul_naive(
+        dest: *mut Mzd,
+        a: *const Mzd,
+        b: *const Mzd,
+        clear: libc::c_int,
+    ) -> *mut Mzd;
 
     /// naive cubic matrix multiplication and addition
     ///

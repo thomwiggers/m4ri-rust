@@ -5,7 +5,7 @@ extern crate m4ri_rust;
 extern crate test;
 
 #[cfg(test)]
-mod benchmarks {
+mod binary_matrix {
     use m4ri_rust::friendly::*;
     use test::Bencher;
 
@@ -18,7 +18,7 @@ mod benchmarks {
     #[bench]
     fn as_vector_column_transpose(b: &mut Bencher) {
         let m1 = BinMatrix::random(1000, 1);
-        b.iter(|| m1.transpose().as_vector())
+        b.iter(|| m1.transposed().as_vector())
     }
 
     #[bench]

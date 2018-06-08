@@ -25,3 +25,6 @@ lto = true
 [features]
 system_alloc = []
 nightly = ["vob/reverse_bits"]
+m4rm_mul = []
+naive_mul = []
+strassen_mul = []
