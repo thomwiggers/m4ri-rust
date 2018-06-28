@@ -271,6 +271,8 @@ impl BinMatrix {
         high_col: usize,
     ) -> BinMatrix {
         let (rows, cols) = (high_row - start_row, high_col - start_col);
+        debug_assert!(rows > 0);
+        debug_assert!(cols > 0);
         let mzd_ptr = unsafe { mzd_init(rows as Rci, cols as Rci) };
         for (r, i) in (start_row..high_row).enumerate() {
             // FIXME speed
