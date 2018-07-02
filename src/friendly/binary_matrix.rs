@@ -628,4 +628,11 @@ mod test {
             }
         }
     }
+
+    #[test]
+    fn test_random_unequal() {
+        let m1 = BinMatrix::random(100, 100);
+        let m2 = BinMatrix::random(100, 100);
+        assert_ne!(m1, m2);
+    }
 }

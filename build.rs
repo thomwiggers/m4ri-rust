@@ -7,6 +7,7 @@ fn main() {
     println!("PWD: {:?}", env::current_dir().unwrap());
 
     if !Path::new("vendor/m4ri/Makefile").exists() {
+        println!("cargo:warning=Building m4ri lib");
         println!("Configuring build!");
 
         let status = Command::new("/usr/bin/autoreconf")

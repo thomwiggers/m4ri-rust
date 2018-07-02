@@ -4,6 +4,16 @@ rust:
   - beta
   - nightly
 
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+      - llvm-toolchain-trusty-5.0
+    packages:
+      - libc6-dev
+      - libc-dev-bin
+      - libc++-dev
+
 before_script:
   - rustup component add rustfmt-preview
 
