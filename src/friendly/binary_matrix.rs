@@ -5,10 +5,37 @@ use std::clone;
 use std::cmp;
 use std::ops;
 use std::ptr;
+#[cfg(feature = "serde")]
+use vob::Vob;
+
+#[cfg(feature = "serde")]
+#[derive(Serialize, Deserialize)]
+#[serde(remote="ptr::NonNull<Mzd>")]
+struct MzdSerializer {
+    #[serde(getter="mzd_to_vecs")]
+    rows: Vec<Vob>,
+}
+
+#[cfg(feature = "serde")]
+impl From<MzdSerializer> for ptr::NonNull<Mzd> {
+    fn from(mzdserializer: MzdSerializer) -> Self {
+        BinMatrix::new(mzdserializer.rows.into_iter().map(|r| BinVector::from(r)).collect()).mzd
+    }
+}
+
+#[cfg(feature = "serde")]
+fn mzd_to_vecs(mzd: &ptr::NonNull<Mzd>) -> Vec<Vob> {
+    let m = BinMatrix { mzd: *mzd };
+    (0..m.nrows()).into_iter().map(|r| {
+        m.get_window(r, 0, r+1, m.ncols()).as_vector().to_vob()
+    }).collect()
+}
 
 /// Structure to represent matrices
 #[derive(Debug)]
+#[cfg_attr(feature="serde", derive(Serialize, Deserialize))]
 pub struct BinMatrix {
+    #[cfg_attr(feature="serde", serde(with="MzdSerializer"))]
     mzd: ptr::NonNull<Mzd>,
 }
 
@@ -136,7 +163,7 @@ impl BinMatrix {
     }
 
     /// Augment the matrix:
-    ///  [A] [B] => [A B]
+    ///  ``[A] [B] => [A B]``
     #[inline]
     pub fn augmented(&self, other: &BinMatrix) -> BinMatrix {
         debug_assert_eq!(self.nrows(), other.nrows(), "The rows need to be equal");

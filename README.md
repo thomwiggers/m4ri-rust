@@ -15,6 +15,14 @@ Thom Wiggers. Solving LPN using Large Covering Codes. *Master's Thesis* Radboud 
 
 See also https://thomwiggers.nl/research/msc-thesis/
 
+# Optional features
+
+* `serde`: Enable serialization
+* M4RI options:
+    * `m4rm_mul`: Use `m4rm` as multiplication algorithm
+    * `naive_mul`: Use the `naive` strategy
+    * `strassen_mul`: Use the Strassen algorithm
+
 # Releases
 
 Releases are available with DOI:

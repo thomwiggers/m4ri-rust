@@ -25,7 +25,7 @@ extern "C" {
     /// free a DJB linear map
     pub fn djb_free(m: *mut Djb);
 
-    /// Add a new operation out[target] ^= srctype[source] to queue
+    /// Add a new operation ``out[target] ^= srctype[source]`` to queue
     ///
     /// z: DJB linear map
     /// target: output index

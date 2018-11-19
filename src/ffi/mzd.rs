@@ -39,7 +39,7 @@ pub struct Mzd {
 
     /// Offset in words from start of block to first word
     ///
-    /// rows[0] = blocks[0].begin + offset_vector
+    /// ``rows[0] = blocks[0].begin + offset_vector``
     offset_vector: Wi,
 
     /// Number of rows to the first row counting from the start of the
@@ -73,7 +73,7 @@ pub struct Mzd {
     high_bitmask: Word,
     /// Pointers to the actual blocks of memory containing the values packed into words
     blocks: *const MzdBlock,
-    /// Address of first word in each row, so the first word of row [i] is in m->rows[i]
+    /// Address of first word in each row, so the first word of `row [i]` is in `m->rows[i]`
     pub rows: *const *mut Word,
 }
 

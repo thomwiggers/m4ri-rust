@@ -10,5 +10,9 @@ extern crate alloc_system;
 
 extern crate rand;
 
+#[cfg(feature = "serde")]
+#[macro_use]
+extern crate serde;
+
 pub mod ffi;
 pub mod friendly;

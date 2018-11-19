@@ -11,6 +11,7 @@ use friendly::binary_matrix::BinMatrix;
 
 /// Wrapper around BitVec
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct BinVector {
     vec: Vob,
 }
@@ -21,6 +22,12 @@ impl ops::Deref for BinVector {
     #[inline]
     fn deref(&self) -> &Self::Target {
         &self.vec
+    }
+}
+
+impl From<Vob> for BinVector {
+    fn from(v: Vob) -> BinVector {
+        BinVector::from(v)
     }
 }
 
