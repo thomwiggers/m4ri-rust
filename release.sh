@@ -42,7 +42,7 @@ git add Cargo.toml
 git commit -m "Releasing version $version"
 
 echo "Creating tag"
-git tag -s "v$version"
+git tag -s "v$version" -m "Release $version"
 
 echo "Building cargo release"
 cargo publish --no-verify
