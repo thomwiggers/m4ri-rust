@@ -9,33 +9,30 @@ use std::ptr;
 use vob::Vob;
 
 #[cfg(feature = "serde")]
-#[derive(Serialize, Deserialize)]
-#[serde(remote="ptr::NonNull<Mzd>")]
+#[derive(Serialize)]
+#[serde(remote = "ptr::NonNull<Mzd>")]
 struct MzdSerializer {
-    #[serde(getter="mzd_to_vecs")]
+    #[serde(getter = "mzd_to_vecs")]
     rows: Vec<Vob>,
-}
-
-#[cfg(feature = "serde")]
-impl From<MzdSerializer> for ptr::NonNull<Mzd> {
-    fn from(mzdserializer: MzdSerializer) -> Self {
-        BinMatrix::new(mzdserializer.rows.into_iter().map(|r| BinVector::from(r)).collect()).mzd
-    }
 }
 
 #[cfg(feature = "serde")]
 fn mzd_to_vecs(mzd: &ptr::NonNull<Mzd>) -> Vec<Vob> {
     let m = BinMatrix { mzd: *mzd };
-    (0..m.nrows()).into_iter().map(|r| {
-        m.get_window(r, 0, r+1, m.ncols()).as_vector().to_vob()
-    }).collect()
+    let result = (0..m.nrows())
+        .into_iter()
+        .map(|r| m.get_window(r, 0, r + 1, m.ncols()).as_vector().to_vob())
+        .collect();
+    // We shouldn't free m as we stole mzd.
+    std::mem::forget(m);
+    result
 }
 
 /// Structure to represent matrices
 #[derive(Debug)]
-#[cfg_attr(feature="serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct BinMatrix {
-    #[cfg_attr(feature="serde", serde(with="MzdSerializer"))]
+    #[cfg_attr(feature = "serde", serde(with = "MzdSerializer", rename = "matrix"))]
     mzd: ptr::NonNull<Mzd>,
 }
 
@@ -53,39 +50,44 @@ macro_rules! nonnull {
     };
 }
 
-#[cfg(all(feature = "m4rm_mul", not(any(feature = "strassen_mul", feature = "naive_mul"))))]
+#[cfg(all(
+    feature = "m4rm_mul",
+    not(any(feature = "strassen_mul", feature = "naive_mul"))
+))]
 macro_rules! mul_impl {
     ($dest:expr, $a:expr, $b:expr) => {
         mzd_mul_m4rm($dest, $a, $b, 0)
     };
 }
 
-#[cfg(
-    any(
-        all(feature = "strassen_mul", not(any(feature = "m4rm_mul", feature = "naive_mul"))),
-        not(any(feature = "strassen_mul", feature = "m4rm_mul", feature = "naive_mul"))
-    )
-)]
+#[cfg(any(
+    all(
+        feature = "strassen_mul",
+        not(any(feature = "m4rm_mul", feature = "naive_mul"))
+    ),
+    not(any(feature = "strassen_mul", feature = "m4rm_mul", feature = "naive_mul"))
+))]
 macro_rules! mul_impl {
     ($dest:expr, $a:expr, $b:expr) => {
         mzd_mul($dest, $a, $b, 0)
     };
 }
 
-#[cfg(all(feature = "naive_mul", not(any(feature = "m4rm_mul", feature = "strassen_mul"))))]
+#[cfg(all(
+    feature = "naive_mul",
+    not(any(feature = "m4rm_mul", feature = "strassen_mul"))
+))]
 macro_rules! mul_impl {
     ($dest:expr, $a:expr, $b:expr) => {
         mzd_mul_naive($dest, $a, $b)
     };
 }
 
-#[cfg(
-    any(
-        all(feature = "naive_mul", feature = "m4rm_mul"),
-        all(feature = "strassen_mul", feature = "naive_mul"),
-        all(feature = "m4rm_mul", feature = "strassen_mul")
-    )
-)]
+#[cfg(any(
+    all(feature = "naive_mul", feature = "m4rm_mul"),
+    all(feature = "strassen_mul", feature = "naive_mul"),
+    all(feature = "m4rm_mul", feature = "strassen_mul")
+))]
 macro_rules! mul_impl {
     ($($a:expr),*) => {
         compile_error!("You need to set only one of the feature flags as mul strategy")
@@ -298,8 +300,8 @@ impl BinMatrix {
         high_col: usize,
     ) -> BinMatrix {
         let (rows, cols) = (high_row - start_row, high_col - start_col);
-        debug_assert!(rows > 0);
-        debug_assert!(cols > 0);
+        debug_assert!(rows > 0 && rows <= self.nrows());
+        debug_assert!(cols > 0 && cols <= self.ncols());
         let mzd_ptr = unsafe { mzd_init(rows as Rci, cols as Rci) };
         for (r, i) in (start_row..high_row).enumerate() {
             // FIXME speed
@@ -598,6 +600,14 @@ mod test {
     #[test]
     fn test_random() {
         BinMatrix::random(10, 1);
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_serialize() {
+        let m = BinMatrix::identity(3);
+        let json = serde_json::to_string(&m).unwrap();
+        assert_eq!(json, "{\"matrix\":{\"rows\":[{\"len\":3,\"vec\":[1]},{\"len\":3,\"vec\":[2]},{\"len\":3,\"vec\":[4]}]}}");
     }
 
     #[test]

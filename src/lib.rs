@@ -13,6 +13,9 @@ extern crate rand;
 #[cfg(feature = "serde")]
 #[macro_use]
 extern crate serde;
+#[cfg(test)]
+#[cfg(feature = "serde")]
+extern crate serde_json;
 
 pub mod ffi;
 pub mod friendly;

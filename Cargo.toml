@@ -16,6 +16,9 @@ rand = "^0.5.0"
 
 serde = { version = "1.0", optional = true, features=["derive"] }
 
+[dev-dependencies]
+serde_json = "1.0"
+
 [dependencies.vob]
 version = "^2"
 features = ["unsafe_internals", "serde"]
