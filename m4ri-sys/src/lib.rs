@@ -1,4 +1,6 @@
-/// Implements the FFI to M4RI
+//! Implements the FFI to M4RI
+//!
+//! See https://bitbucket.org/malb/m4ri
 mod brilliantrussian;
 mod djb;
 mod echelonform;
