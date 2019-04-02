@@ -1,8 +1,8 @@
-/// Links to `echelonform.h`
+//! Links to `echelonform.h`
 use libc;
 
-use ffi::misc::Rci;
-use ffi::mzd::Mzd;
+use crate::misc::Rci;
+use crate::mzd::Mzd;
 
 extern "C" {
 

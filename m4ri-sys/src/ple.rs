@@ -1,7 +1,8 @@
-use ffi::misc::Rci;
-use ffi::mzd::Mzd;
-use ffi::mzp::Mzp;
-/// References `ple.h`
+//! References `ple.h`
+
+use crate::misc::Rci;
+use crate::mzd::Mzd;
+use crate::mzp::Mzp;
 use libc;
 
 extern "C" {

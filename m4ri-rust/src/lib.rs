@@ -17,5 +17,6 @@ extern crate serde;
 #[cfg(feature = "serde")]
 extern crate serde_json;
 
-pub mod ffi;
+extern crate m4ri_sys as ffi;
+
 pub mod friendly;

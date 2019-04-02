@@ -1,0 +1,16 @@
+[package]
+name = "m4ri-sys"
+version = "0.3.0"  # Package version
+authors = ["Thom Wiggers <thom@thomwiggers.nl>"]
+edition = "2018"
+description = "Bindings to m4ri"
+repository = "https://github.com/thomwiggers/m4ri-rust"
+license = "GPL-2.0+"
+
+[badges]
+travis-ci = { repository = "thomwiggers/m4ri-rust" }
+maintenance = { status = "experimental" }
+
+
+[dependencies]
+libc = "^0.2"

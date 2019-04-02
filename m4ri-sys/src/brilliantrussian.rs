@@ -1,5 +1,5 @@
-use ffi::misc::Rci;
-use ffi::mzd::Mzd;
+use crate::misc::Rci;
+use crate::mzd::Mzd;
 /// See `brilliantrussian.h`
 use libc;
 

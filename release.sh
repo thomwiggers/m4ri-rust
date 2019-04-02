@@ -30,7 +30,7 @@ if [ "$tag" = "v$version" ]; then
 fi
 
 echo "Updating Cargo.toml version"
-sed -i "s/version = \"[0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}\"  # Package version/version = \"$version\"  # Package version/" Cargo.toml
+sed -i "s/version = \"[0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}\"  # Package version/version = \"$version\"  # Package version/" */Cargo.toml
 if grep -q "version = \"$version\"" Cargo.toml; then
     echo "Version update in Cargo.toml succeeded"
 else

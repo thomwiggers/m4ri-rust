@@ -1,0 +1,31 @@
+[package]
+name = "m4ri-rust"
+version = "0.2.2"  # Package version
+authors = ["Thom Wiggers <thom@thomwiggers.nl>"]
+description = "M4RI-based boolean linear algebra"
+repository = "https://github.com/thomwiggers/m4ri-rust"
+license = "GPL-2.0+"
+
+[badges]
+travis-ci = { repository = "thomwiggers/m4ri-rust" }
+maintenance = { status = "experimental" }
+
+[dependencies]
+libc = "^0.2"
+rand = "^0.6"
+m4ri-sys = { path = "../m4ri-sys" }
+
+serde = { version = "1.0", optional = true, features=["derive"] }
+
+[dev-dependencies]
+serde_json = "1.0"
+
+[dependencies.vob]
+version = "^2"
+features = ["unsafe_internals", "serde"]
+
+[features]
+system_alloc = []
+m4rm_mul = []
+naive_mul = []
+strassen_mul = []

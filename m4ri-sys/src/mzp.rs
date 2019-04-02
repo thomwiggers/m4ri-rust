@@ -3,8 +3,8 @@
 /// Some functions are missing
 use libc;
 
-use ffi::misc::Rci;
-use ffi::mzd::Mzd;
+use crate::misc::Rci;
+use crate::mzd::Mzd;
 
 #[repr(C)]
 pub struct Mzp {

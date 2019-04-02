@@ -1,6 +1,6 @@
-use ffi::misc::Rci;
-/// Corresponds to djb.h
-use ffi::mzd::Mzd;
+//! Corresponds to djb.h
+use crate::misc::Rci;
+use crate::mzd::Mzd;
 
 #[repr(C)]
 pub struct Djb {

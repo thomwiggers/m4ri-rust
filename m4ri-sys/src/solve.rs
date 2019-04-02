@@ -1,9 +1,11 @@
-use ffi::misc::Rci;
-use ffi::mzd::Mzd;
-use ffi::mzp::Mzp;
-/// System solving with matrix routines
-///
-/// Corresponds to m4ri/solve.h
+//! System solving with matrix routines
+//!
+//! Corresponds to m4ri/solve.h
+
+use crate::misc::Rci;
+use crate::mzd::Mzd;
+use crate::mzp::Mzp;
+
 use libc;
 
 extern "C" {

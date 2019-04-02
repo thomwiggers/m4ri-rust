@@ -1,4 +1,4 @@
-/// Links to `graycode.h`
+//! Links to `graycode.h`
 use libc;
 
 #[repr(C)]

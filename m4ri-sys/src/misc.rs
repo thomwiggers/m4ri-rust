@@ -1,9 +1,16 @@
-/// Links to m4ri/misc.h
+//! Links to m4ri/misc.h
 use libc;
 
+/// M4RI Internal representation
 pub type Rci = libc::c_int;
+
+/// M4RI Internal representation
 pub type BIT = libc::c_int;
+
+/// M4RI Internal representation
 pub type Word = u64;
+
+/// M4RI Internal representation
 pub type Wi = libc::c_int;
 
 /// The number of bits in a word

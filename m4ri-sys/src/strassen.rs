@@ -1,5 +1,6 @@
-use ffi::mzd::Mzd;
-/// Links to strassen.h
+//! Links to strassen.h
+
+use crate::mzd::Mzd;
 use libc;
 
 extern "C" {

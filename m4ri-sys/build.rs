@@ -45,5 +45,6 @@ fn main() {
 
     // Output settings for Cargo
     println!("cargo:rustc-link-search=native=vendor/m4ri/.libs");
+    println!("cargo:rustc-link-search=native=m4ri-sys/vendor/m4ri/.libs");
     println!("cargo:rustc-link-lib=static=m4ri");
 }

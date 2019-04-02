@@ -1,5 +1,5 @@
-use ffi::mzd::Mzd;
-/// Corresponds to `mp.h`
+//! Corresponds to `mp.h`
+use crate::mzd::Mzd;
 use libc;
 
 extern "C" {

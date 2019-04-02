@@ -1,15 +1,16 @@
-/// Links to mzd.h
-///
-/// FIXME implement missing functions
+//! Links to mzd.h
+//!
+//! FIXME implement missing functions
+//!
 use libc;
 use std::mem::size_of;
 
-use ffi::misc::m4ri_one;
-use ffi::misc::m4ri_radix;
-use ffi::misc::Rci;
-use ffi::misc::Wi;
-use ffi::misc::Word;
-use ffi::misc::BIT;
+use crate::misc::m4ri_one;
+use crate::misc::m4ri_radix;
+use crate::misc::Rci;
+use crate::misc::Wi;
+use crate::misc::Word;
+use crate::misc::BIT;
 
 /// Represents the blocks used by M4RI internally
 #[repr(C)]
