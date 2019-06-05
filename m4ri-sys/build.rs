@@ -14,7 +14,7 @@ fn main() {
             .arg("--install")
             .current_dir("vendor/m4ri")
             .status()
-            .expect("Failed to execute");
+            .expect("Failed to execute /usr/bin/autoreconf");
         if !status.success() {
             panic!("Autoconf failed!");
         }
@@ -26,7 +26,7 @@ fn main() {
             .env("CFLAGS", "-O3 -fPIC")
             .current_dir("vendor/m4ri")
             .status()
-            .expect("Failed to execute configure");
+            .expect("Failed to execute ./configure");
         if !status.success() {
             panic!("Configure failed");
         }
@@ -38,7 +38,7 @@ fn main() {
         .arg("-j3")
         .current_dir("vendor/m4ri")
         .status()
-        .expect("Failed to execute make");
+        .expect("Failed to execute /usr/bin/make");
     if !status.success() {
         panic!("Make failed");
     }
