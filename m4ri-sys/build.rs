@@ -10,11 +10,11 @@ fn main() {
         println!("cargo:warning=Building m4ri lib");
         println!("Configuring build!");
 
-        let status = Command::new("/usr/bin/autoreconf")
+        let status = Command::new("autoreconf")
             .arg("--install")
             .current_dir("vendor/m4ri")
             .status()
-            .expect("Failed to execute /usr/bin/autoreconf");
+            .expect("Failed to execute autoreconf");
         if !status.success() {
             panic!("Autoconf failed!");
         }
@@ -34,7 +34,7 @@ fn main() {
 
     println!("Executing Make");
 
-    let status = Command::new("/usr/bin/make")
+    let status = Command::new("make")
         .arg("-j3")
         .current_dir("vendor/m4ri")
         .status()
