@@ -23,4 +23,4 @@ pub static m4ri_one: Word = 1u64;
 
 /// A word with all bits set
 #[allow(non_upper_case_globals, dead_code)]
-pub static m4ri_ffff: Word = 0xffffffffffffff;
+pub static m4ri_ffff: Word = 0xffff_ffff_ffff_ffff;

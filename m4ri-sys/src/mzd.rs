@@ -300,21 +300,22 @@ pub unsafe fn mzd_first_row(matrix: *const Mzd) -> *mut Word {
 /// Param row the row index
 #[inline]
 pub unsafe fn mzd_row(matrix: *const Mzd, row: Rci) -> *mut Word {
+    debug_assert!(row >= 0);
     let big_vector: Wi = (*matrix).offset_vector + row * (*matrix).rowstride;
-    let mut result: *mut Word = (*(*matrix).blocks).begin.offset(big_vector as isize);
-
     // FIXME __M4RI_UNLIKELY -> _builtin_expect
-    if (*matrix).flags & MZD_FLAG_MULTIPLE_BLOCKS != 0 {
+    let result: *mut Word = if (*matrix).flags & MZD_FLAG_MULTIPLE_BLOCKS != 0 {
         let n = ((*matrix).row_offset + row) >> (*matrix).blockrows_log;
-        result = (*(*matrix).blocks.offset(n as isize)).begin.offset(
+        (*(*matrix).blocks.add(n as usize)).begin.offset(
             (big_vector - n * ((*(*matrix).blocks).size / ::std::mem::size_of::<Word>()) as i32)
                 as isize,
-        );
-    }
+        )
+    } else {
+        (*(*matrix).blocks).begin.add(big_vector as usize)
+    };
 
     debug_assert_eq!(
         result,
-        *(*matrix).rows.offset(row as isize),
+        *(*matrix).rows.add(row as usize),
         "Result is not the expected ptr"
     );
     result

@@ -1,5 +1,4 @@
 #![feature(test)]
-#![feature(concat_idents_macro)]
 
 extern crate m4ri_rust;
 extern crate test;

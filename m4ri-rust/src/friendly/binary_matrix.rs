@@ -106,7 +106,7 @@ impl BinMatrix {
 
     /// Create a new matrix
     pub fn new(rows: Vec<BinVector>) -> BinMatrix {
-        if rows.len() == 0 {
+        if rows.is_empty() {
             panic!("Can't create a 0 matrix");
         }
         let first_col_length = rows[0].len();
@@ -119,7 +119,7 @@ impl BinMatrix {
 
         // Directly write to the underlying Mzd storage
         for (row_index, row) in rows.into_iter().enumerate() {
-            let row_ptr: *const *mut Word = unsafe { (*mzd_ptr).rows.offset(row_index as isize) };
+            let row_ptr: *const *mut Word = unsafe { (*mzd_ptr).rows.add(row_index) };
             for (block_index, row_block) in row.iter_storage().enumerate() {
                 assert_eq!(
                     ::std::mem::size_of::<usize>(),
@@ -127,7 +127,7 @@ impl BinMatrix {
                     "only works on 64 bit"
                 );
                 unsafe {
-                    *((*row_ptr).offset(block_index as isize)) = row_block as u64;
+                    *((*row_ptr).add(block_index)) = row_block as u64;
                 }
             }
         }
@@ -263,14 +263,14 @@ impl BinMatrix {
                 for i in 0..(self.ncols() / 64) {
                     let row_ptr: *const *mut Word = unsafe { (*self.mzd.as_ptr()).rows };
                     let word_ptr: *const Word =
-                        unsafe { ((*row_ptr) as *const Word).offset(i as isize) };
+                        unsafe { ((*row_ptr) as *const Word).add(i) };
                     collector.push(unsafe { *word_ptr as usize });
                 }
                 // process last block
                 if self.ncols() % 64 != 0 {
                     let row_ptr: *const *mut Word = unsafe { (*self.mzd.as_ptr()).rows };
                     let word_ptr: *const Word =
-                        unsafe { (*row_ptr).offset((self.ncols() as isize - 1) / 64) };
+                        unsafe { (*row_ptr).add((self.ncols() - 1) / 64) };
                     let word = unsafe { *word_ptr };
                     collector.push(word as usize);
                 }

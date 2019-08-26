@@ -10,7 +10,7 @@ use rand::Rng;
 use friendly::binary_matrix::BinMatrix;
 
 /// Wrapper around BitVec
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct BinVector {
     vec: Vob,
@@ -113,8 +113,15 @@ impl BinVector {
     }
 
     #[inline]
-    pub fn to_vob(self) -> Vob {
+    pub fn into_vob(self) -> Vob {
         self.vec
+    }
+
+    #[inline]
+    #[deprecated(since="0.3.3", note="use `into_vob` instead")]
+    #[allow(clippy::wrong_self_convention)]
+    pub fn to_vob(self) -> Vob {
+        self.into_vob()
     }
 
     pub fn as_matrix(&self) -> BinMatrix {
@@ -187,11 +194,7 @@ impl<'a> ops::Mul<&'a BinVector> for &'a BinVector {
     fn mul(self, other: &BinVector) -> Self::Output {
         let mut vec = self.clone();
         vec.and(&other);
-        if vec.count_ones() % 2 == 1 {
-            true
-        } else {
-            false
-        }
+        vec.count_ones() % 2 == 1
     }
 }
 
@@ -203,11 +206,7 @@ impl ops::Mul<BinVector> for BinVector {
     fn mul(self, other: BinVector) -> Self::Output {
         let mut vec = self.clone();
         vec.and(&other);
-        if vec.count_ones() % 2 == 1 {
-            true
-        } else {
-            false
-        }
+        vec.count_ones() % 2 == 1
     }
 }
 
@@ -225,10 +224,10 @@ mod test {
 
     #[test]
     fn from_bytes() {
-        let b = BinVector::from_bytes(&[0b11111111]);
+        let b = BinVector::from_bytes(&[0b1111_1111]);
         assert_eq!(b.len(), 8);
 
-        let b = BinVector::from_bytes(&[0b10000000]);
+        let b = BinVector::from_bytes(&[0b1000_0000]);
         assert_eq!(b.get(0), Some(true));
         assert_eq!(b.get(1), Some(false));
     }
@@ -280,6 +279,6 @@ mod test {
         let b = BinVector::from_elem(10, false);
         assert_eq!(a.count_ones(), 10);
         assert_eq!(b.count_ones(), 0);
-        assert_eq!(BinVector::from_bytes(&[0b10101000]).count_ones(), 3);
+        assert_eq!(BinVector::from_bytes(&[0b1010_1000]).count_ones(), 3);
     }
 }

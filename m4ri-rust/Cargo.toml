@@ -12,7 +12,7 @@ maintenance = { status = "experimental" }
 
 [dependencies]
 libc = "^0.2"
-rand = "^0.6"
+rand = "^0.7"
 m4ri-sys = { version = "0.3.0", path = "../m4ri-sys" }
 
 serde = { version = "1.0", optional = true, features=["derive"] }
