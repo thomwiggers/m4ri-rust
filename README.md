@@ -27,7 +27,7 @@ See also https://thomwiggers.nl/research/msc-thesis/
 
 Releases are available with DOI:
 
-[![DOI](https://zenodo.org/badge/126357607.svg)](https://zenodo.org/badge/latestdoi/126357607)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3377514.svg)](https://doi.org/10.5281/zenodo.3377514)
 
 [m4ri]: https://malb.bitbucket.io/m4ri/
 [m4ri references]: https://bitbucket.org/malb/m4ri/wiki/Further%20Reading
