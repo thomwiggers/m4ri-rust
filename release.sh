@@ -38,14 +38,16 @@ else
 fi
 
 echo "Committing Cargo.toml"
-git add Cargo.toml
+git add */Cargo.toml
 git commit -m "Releasing version $version"
 
 echo "Creating tag"
 git tag -s "v$version" -m "Release $version"
 
 echo "Building cargo release"
-cargo publish --no-verify
+pushd m4ri-sys; cargo publish --no-verify; popd
+echo "Waiting for crates.io to settle"; sleep 5
+pushd m4ri-rust; cargo publish --no-verify; popd
 
 echo "Pushing git objects"
 git push
