@@ -104,23 +104,32 @@ impl BinMatrix {
         BinMatrix { mzd }
     }
 
-    /// Create a new matrix
     pub fn new(rows: Vec<BinVector>) -> BinMatrix {
+        //let storages: Vec<Vec<usize>> = rows.into_iter().map(|mut binvec| unsafe { binvec.get_storage_mut().clone() }).collect();
+        let mut rows = rows.clone(); // XXX get rid of once we can jst do iter instead.
+        let rowlen = rows[0].len();
+        let storage: Vec<&[usize]> = rows.iter_mut().map(|vec| unsafe {vec.get_storage_mut()} as &[usize]).collect();
+        //BinMatrix::zero(1,1)
+        BinMatrix::from_slices(&storage, rowlen)
+    }
+
+    /// Create a new matrix
+    pub fn from_slices(rows: &[&[usize]], rowlen: usize) -> BinMatrix {
         if rows.is_empty() {
             panic!("Can't create a 0 matrix");
         }
-        let first_col_length = rows[0].len();
-        if cfg!(not(ndebug)) {
-            for row in rows.iter() {
-                debug_assert_eq!(first_col_length, row.len());
-            }
+
+        for row in rows {
+            let range = ((row.len()-1)*64)..=(row.len() * 64);
+            debug_assert!(range.contains(&rowlen), "row wrong length");
         }
-        let mzd_ptr = unsafe { mzd_init(rows.len() as c_int, rows[0].len() as c_int) };
+
+        let mzd_ptr = unsafe { mzd_init(rows.len() as c_int, rowlen as c_int) };
 
         // Directly write to the underlying Mzd storage
         for (row_index, row) in rows.into_iter().enumerate() {
             let row_ptr: *const *mut Word = unsafe { (*mzd_ptr).rows.add(row_index) };
-            for (block_index, row_block) in row.iter_storage().enumerate() {
+            for (block_index, row_block) in row.iter().copied().enumerate() {
                 assert_eq!(
                     ::std::mem::size_of::<usize>(),
                     ::std::mem::size_of::<u64>(),
