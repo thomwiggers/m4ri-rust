@@ -33,4 +33,16 @@ mod binary_vector {
 
         b.iter(|| &v1 * &v2);
     }
+
+    #[bench]
+    fn count_ones(b: &mut Bencher) {
+        let v1 = BinVector::random(1000);
+        b.iter(|| v1.count_ones());
+    }
+
+    #[bench]
+    fn use_iter_set_bit_for_count(b: &mut Bencher) {
+        let v1 = BinVector::random(1000);
+        b.iter(|| { v1.iter_set_bits(..).count() })
+    }
 }

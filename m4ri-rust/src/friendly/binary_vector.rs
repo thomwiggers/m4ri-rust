@@ -1,6 +1,6 @@
 /// Implement binary vectors to help implement functions on matrices
 ///
-/// Wraps the `bit_vec` crate.
+/// Wraps the `vob` crate.
 use std::ops;
 use vob::Vob;
 
@@ -9,7 +9,7 @@ use rand::Rng;
 
 use friendly::binary_matrix::BinMatrix;
 
-/// Wrapper around BitVec
+/// Wrapper around vob::Vob
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct BinVector {
