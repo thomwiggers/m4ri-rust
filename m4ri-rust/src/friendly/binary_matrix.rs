@@ -127,7 +127,7 @@ impl BinMatrix {
         }
 
         for row in rows {
-            debug_assert!(row.as_ref().len() * 64 >= rowlen);
+            debug_assert!(row.as_ref().len() * 64 >= rowlen, "expected len {} bits but got only {} blocks", rowlen, row.as_ref().len());
         }
 
         let mzd_ptr = unsafe { mzd_init(rows.len() as c_int, rowlen as c_int) };
