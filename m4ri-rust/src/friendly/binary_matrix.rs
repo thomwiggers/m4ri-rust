@@ -37,6 +37,7 @@ pub struct BinMatrix {
 }
 
 unsafe impl Sync for BinMatrix {}
+unsafe impl Send for BinMatrix {}
 
 impl ops::Drop for BinMatrix {
     fn drop(&mut self) {
@@ -135,7 +136,13 @@ impl BinMatrix {
         // Directly write to the underlying Mzd storage
         for (row_index, row) in rows.into_iter().enumerate() {
             let row_ptr: *const *mut Word = unsafe { (*mzd_ptr).rows.add(row_index) };
-            for (block_index, row_block) in row.as_ref().iter().take(blocks_per_row).copied().enumerate() {
+            for (block_index, row_block) in row
+                .as_ref()
+                .iter()
+                .take(blocks_per_row)
+                .copied()
+                .enumerate()
+            {
                 assert_eq!(
                     ::std::mem::size_of::<usize>(),
                     ::std::mem::size_of::<u64>(),
@@ -157,6 +164,25 @@ impl BinMatrix {
                 mzd: nonnull!(mzd_ptr),
             }
         }
+    }
+
+    pub fn count_ones(&self) -> u32 {
+        assert!(self.nrows() == 1 || self.ncols() == 1, "only works on single row or single column matrices");
+        let mut accumulator = 0;
+        for row in 0..self.nrows() {
+            let row_ptr: *const *mut Word = unsafe { (*self.mzd.as_ptr()).rows.add(row) };
+            for i in 0..(self.ncols() / 64) {
+                let word_ptr: *const Word = unsafe { (*row_ptr).add(i) };
+                accumulator += unsafe { (*word_ptr).count_ones() };
+            }
+            // process last block
+            if self.ncols() % 64 != 0 {
+                let word_ptr: *const Word = unsafe { (*row_ptr).add((self.ncols() - 1) / 64) };
+                let word = unsafe { *word_ptr } & ((1 << self.ncols() % 64) - 1);
+                accumulator += word.count_ones();
+            }
+        }
+        accumulator
     }
 
     pub fn random(rows: usize, columns: usize) -> BinMatrix {
@@ -354,7 +380,7 @@ impl BinMatrix {
         }
     }
 
-    pub fn mul_slice(&self, other: &[u64]) -> BinVector {
+    pub fn mul_slice(&self, other: &[u64]) -> BinMatrix {
         // threadlocal storage for temporary?
         debug_assert!(
             self.ncols() <= other.len() * 64,
@@ -363,12 +389,12 @@ impl BinMatrix {
             self.ncols(),
             other.len() * 64
         );
-        let other = BinMatrix::from_slices(&[other], self.ncols());
-        let result_dest = unsafe { mzd_init(self.nrows() as Rci, 1) };
+        let other = BinMatrix::from_slices(&[other], self.ncols()).transposed();
         let result =
-            unsafe { mzd_mul_naive(result_dest, self.mzd.as_ptr(), other.mzd.as_ptr()) };
+            unsafe { mzd_mul_naive(ptr::null_mut(), self.mzd.as_ptr(), other.mzd.as_ptr()) };
+
         let matresult = BinMatrix::from_mzd(result);
-        matresult.as_vector()
+        matresult
     }
 }
 
@@ -478,7 +504,7 @@ impl<'a> ops::Mul<&'a BinVector> for &'a BinMatrix {
                 .copied()
                 .map(|b| b as u64)
                 .collect::<Vec<u64>>(),
-        )
+        ).as_vector()
     }
 }
 
@@ -529,6 +555,7 @@ pub fn solve_left(a: BinMatrix, b: &mut BinMatrix) -> bool {
 #[cfg(test)]
 mod test {
     use super::*;
+    use rand::prelude::*;
     use vob::Vob;
 
     #[test]
@@ -699,5 +726,16 @@ mod test {
         let m1 = BinMatrix::random(100, 100);
         let m2 = BinMatrix::random(100, 100);
         assert_ne!(m1, m2);
+    }
+
+    #[test]
+    fn test_count_ones() {
+        let rng = &mut rand::thread_rng();
+        for _ in 0..1000 {
+            let size = rng.gen_range(1..1000);
+            let v = BinVector::random(size);
+            assert_eq!(v.count_ones(), v.as_matrix().count_ones());
+            assert_eq!(v.count_ones(), v.as_column_matrix().count_ones());
+        }
     }
 }
