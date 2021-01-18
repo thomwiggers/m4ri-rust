@@ -12,6 +12,7 @@ use friendly::binary_matrix::BinMatrix;
 /// Wrapper around vob::Vob
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[repr(transparent)]
 pub struct BinVector {
     vec: Vob,
 }
