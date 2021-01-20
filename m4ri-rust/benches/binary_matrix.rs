@@ -37,7 +37,22 @@ mod binary_matrix {
     fn matrix_vector(b: &mut Bencher) {
         let v = BinVector::random(1000);
         let m = BinMatrix::random(64, 1000);
+
         b.iter(|| &m * &v);
+    }
+
+    #[bench]
+    fn matrix_mul_slice(b: &mut Bencher) {
+        let v = BinVector::random(500);
+        let v_stor = v
+            .get_storage()
+            .iter()
+            .map(|v| *v as u64)
+            .collect::<Vec<_>>();
+
+        let m = BinMatrix::random(34, 128);
+
+        b.iter(|| m.mul_slice(&v_stor))
     }
 
     macro_rules! multiply {
@@ -59,5 +74,4 @@ mod binary_matrix {
     multiply!(matrix_multiply_1000x64_64x1, 1000, 64, 1);
     multiply!(matrix_multiply_1x64_64x100, 1, 64, 1000);
     multiply!(matrix_multiply_10x1000_1000x10, 10, 1000, 10);
-
 }

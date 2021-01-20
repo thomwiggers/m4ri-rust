@@ -126,15 +126,6 @@ extern "C" {
         highc: Rci,
     ) -> *mut Mzd;
 
-    /// Create a const window/view into a const matrix
-    pub fn mzd_init_window_const(
-        matrix: *const Mzd,
-        lowr: Rci,
-        lowc: Rci,
-        highr: Rci,
-        highc: Rci,
-    ) -> *const Mzd;
-
     /// Swap the two rows rowa and rowb
     pub fn mzd_row_swap(matrix: *mut Mzd, rowa: Rci, rowb: Rci);
 
@@ -321,6 +312,23 @@ pub unsafe fn mzd_row(matrix: *const Mzd, row: Rci) -> *mut Word {
     result
 }
 
+/// Create a const window/view into a const matrix
+///
+/// Note that this function still allocates a new Mzd struct that needs to be dropped.
+///
+/// Also, this function copies a bunch of references
+/// As a result, you could get multiple mut references into the same memory.
+/// This is very unsafe if not used properly.
+pub unsafe fn mzd_init_window_const(
+    matrix: *const Mzd,
+    lowr: Rci,
+    lowc: Rci,
+    highr: Rci,
+    highc: Rci,
+) -> *const Mzd {
+    mzd_init_window(std::mem::transmute(matrix), lowr, lowc, highr, highc)
+}
+
 /// Test if a matrix is windowed
 ///
 /// return a non-zero value if the matrix is windowed, otherwise return zero
@@ -350,7 +358,16 @@ impl Drop for Mzd {
 /// This is actually just `mzd_free` so call `ptr::drop_in_place` instead
 #[inline]
 pub unsafe fn mzd_free_window(matrix: *mut Mzd) {
-    mzd_free(matrix);
+    std::ptr::drop_in_place(matrix)
+}
+
+/// Free a "const" window created with `mzd_init_window_const`.
+///
+/// This function *MUST* be called for const windows.
+#[inline]
+pub unsafe fn mzd_free_window_const(matrix: *const Mzd) {
+    let matrix: *mut Mzd = std::mem::transmute(matrix);
+    std::ptr::drop_in_place(matrix)
 }
 
 #[cfg(test)]

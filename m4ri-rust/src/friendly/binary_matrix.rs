@@ -1,7 +1,6 @@
 use ffi::*;
 use friendly::binary_vector::BinVector;
 use libc::c_int;
-use std::clone;
 use std::cmp;
 use std::ops;
 use std::ptr;
@@ -294,6 +293,33 @@ impl BinMatrix {
         unsafe { self.mzd.as_ref().ncols as usize }
     }
 
+    pub fn get_word(&self, row: usize, column: usize) -> Word {
+        assert!(row < self.nrows());
+        assert!(column < self.ncols());
+
+        unsafe { self.get_word_unchecked(row, column) }
+    }
+
+    #[inline]
+    pub unsafe fn get_word_unchecked(&self, row: usize, column: usize) -> Word {
+        let row_ptr: *const *mut Word = (*self.mzd.as_ptr()).rows.add(row);
+        let word_ptr: *const Word = ((*row_ptr) as *const Word).add(column);
+        *word_ptr
+    }
+
+    pub fn get_word_mut(&self, row: usize, column: usize) -> &mut Word {
+        assert!(row < self.nrows());
+        assert!(column < self.ncols());
+        unsafe { self.get_word_mut_unchecked(row, column) }
+    }
+
+    #[inline]
+    pub unsafe fn get_word_mut_unchecked(&self, row: usize, column: usize) -> &mut Word {
+        let row_ptr: *const *mut Word = (*self.mzd.as_ptr()).rows.add(row);
+        let word_ptr: *mut Word = ((*row_ptr) as *mut Word).add(column / 64);
+        word_ptr.as_mut().unwrap()
+    }
+
     /// Get as a vector
     ///
     /// Works both on single-column and single-row matrices
@@ -335,7 +361,7 @@ impl BinMatrix {
         bit == 1
     }
 
-    /// Get a window from the matrix
+    /// Get a window from the matrix. Makes a copy.
     pub fn get_window(
         &self,
         start_row: usize,
@@ -381,7 +407,7 @@ impl BinMatrix {
     }
 
     pub fn mul_slice(&self, other: &[u64]) -> BinMatrix {
-        // threadlocal storage for temporary?
+        // I've tried to use thread-local storage for the temporary here, but it wasn't faster.
         debug_assert!(
             self.ncols() <= other.len() * 64,
             "Mismatched sizes: ({}x{}) * ({}x1) (too big)",
@@ -389,10 +415,10 @@ impl BinMatrix {
             self.ncols(),
             other.len() * 64
         );
-        let other = BinMatrix::from_slices(&[other], self.ncols()).transposed();
-        let result =
-            unsafe { mzd_mul_naive(ptr::null_mut(), self.mzd.as_ptr(), other.mzd.as_ptr()) };
-
+        let result = {
+            let other = BinMatrix::from_slices(&[other], self.ncols()).transposed();
+            unsafe { mzd_mul_naive(ptr::null_mut(), self.mzd.as_ptr(), other.mzd.as_ptr()) }
+        };
         let matresult = BinMatrix::from_mzd(result);
         matresult
     }
@@ -416,7 +442,7 @@ impl ops::Mul<BinMatrix> for BinMatrix {
     }
 }
 
-impl clone::Clone for BinMatrix {
+impl std::clone::Clone for BinMatrix {
     fn clone(&self) -> Self {
         let mzd = unsafe { nonnull!(mzd_copy(ptr::null_mut(), self.mzd.as_ptr())) };
         BinMatrix { mzd }
