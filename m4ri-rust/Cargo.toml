@@ -1,10 +1,11 @@
 [package]
 name = "m4ri-rust"
-version = "0.3.2"  # Package version
+version = "0.4.0"  # Package version
 authors = ["Thom Wiggers <thom@thomwiggers.nl>"]
 description = "M4RI-based boolean linear algebra"
 repository = "https://github.com/thomwiggers/m4ri-rust"
 license = "GPL-2.0+"
+readme = "../README.md"
 
 [badges]
 travis-ci = { repository = "thomwiggers/m4ri-rust" }
@@ -12,20 +13,22 @@ maintenance = { status = "experimental" }
 
 [dependencies]
 libc = "^0.2"
-rand = "^0.7"
-m4ri-sys = { version = "0.3.0", path = "../m4ri-sys" }
-
+rand = "^0.8"
+m4ri-sys = { version = "0.3.3", path = "../m4ri-sys" }
 serde = { version = "1.0", optional = true, features=["derive"] }
 
 [dev-dependencies]
 serde_json = "1.0"
 
 [dependencies.vob]
-version = "^2"
+version = "^2.0.6"
 features = ["unsafe_internals", "serde"]
+#git = "https://github.com/softdevteam/vob.git"
+
 
 [features]
 system_alloc = []
 m4rm_mul = []
 naive_mul = []
 strassen_mul = []
+#serde = ["dep:serde", "vob/serde"]   // needs cargo -Znamespaced-features stabilized

@@ -23,7 +23,7 @@ fn main() {
             .arg("--enable-static")
             .arg("--enable-thread-safe")
             .arg("--disable-png")
-            .env("CFLAGS", "-O3 -fPIC")
+            .env("CFLAGS", "-Ofast -fPIC")
             .current_dir("vendor/m4ri")
             .status()
             .expect("Failed to execute ./configure");
@@ -35,7 +35,7 @@ fn main() {
     println!("Executing Make");
 
     let status = Command::new("make")
-        .arg("-j3")
+        .arg("-j5")
         .current_dir("vendor/m4ri")
         .status()
         .expect("Failed to execute /usr/bin/make");

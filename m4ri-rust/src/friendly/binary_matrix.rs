@@ -1,7 +1,6 @@
 use ffi::*;
 use friendly::binary_vector::BinVector;
 use libc::c_int;
-use std::clone;
 use std::cmp;
 use std::ops;
 use std::ptr;
@@ -21,7 +20,7 @@ fn mzd_to_vecs(mzd: &ptr::NonNull<Mzd>) -> Vec<Vob> {
     let m = BinMatrix { mzd: *mzd };
     let result = (0..m.nrows())
         .into_iter()
-        .map(|r| m.get_window(r, 0, r + 1, m.ncols()).as_vector().to_vob())
+        .map(|r| m.get_window(r, 0, r + 1, m.ncols()).as_vector().into_vob())
         .collect();
     // We shouldn't free m as we stole mzd.
     std::mem::forget(m);
@@ -37,6 +36,7 @@ pub struct BinMatrix {
 }
 
 unsafe impl Sync for BinMatrix {}
+unsafe impl Send for BinMatrix {}
 
 impl ops::Drop for BinMatrix {
     fn drop(&mut self) {
@@ -106,26 +106,53 @@ impl BinMatrix {
 
     /// Create a new matrix
     pub fn new(rows: Vec<BinVector>) -> BinMatrix {
-        if rows.is_empty() {
+        let rowlen = rows[0].len();
+        let storage: Vec<Vec<u64>> = rows
+            .iter()
+            .map(|vec| {
+                vec.get_storage()
+                    .into_iter()
+                    .copied()
+                    .map(|b| b as u64)
+                    .collect()
+            })
+            .collect();
+        BinMatrix::from_slices(&storage, rowlen)
+    }
+
+    /// Create a new matrix from slices
+    pub fn from_slices<T: AsRef<[u64]>>(rows: &[T], rowlen: usize) -> BinMatrix {
+        if rows.is_empty() || rowlen == 0 {
             panic!("Can't create a 0 matrix");
         }
-        let first_col_length = rows[0].len();
-        if cfg!(not(ndebug)) {
-            for row in rows.iter() {
-                debug_assert_eq!(first_col_length, row.len());
-            }
-        }
-        let mzd_ptr = unsafe { mzd_init(rows.len() as c_int, rows[0].len() as c_int) };
 
+        for row in rows {
+            debug_assert!(row.as_ref().len() * 64 >= rowlen, "expected len {} bits but got only {} blocks", rowlen, row.as_ref().len());
+        }
+
+        let mzd_ptr = unsafe { mzd_init(rows.len() as c_int, rowlen as c_int) };
+
+        let blocks_per_row = rowlen / 64 + if rowlen % 64 == 0 { 0 } else { 1 };
         // Directly write to the underlying Mzd storage
         for (row_index, row) in rows.into_iter().enumerate() {
             let row_ptr: *const *mut Word = unsafe { (*mzd_ptr).rows.add(row_index) };
-            for (block_index, row_block) in row.iter_storage().enumerate() {
+            for (block_index, row_block) in row
+                .as_ref()
+                .iter()
+                .take(blocks_per_row)
+                .copied()
+                .enumerate()
+            {
                 assert_eq!(
                     ::std::mem::size_of::<usize>(),
                     ::std::mem::size_of::<u64>(),
                     "only works on 64 bit"
                 );
+                let row_block = if block_index == rowlen / 64 {
+                    row_block & ((1 << (rowlen % 64)) - 1)
+                } else {
+                    row_block
+                };
                 unsafe {
                     *((*row_ptr).add(block_index)) = row_block as u64;
                 }
@@ -139,6 +166,29 @@ impl BinMatrix {
         }
     }
 
+    /// Get the hamming weight for single-row or single-column matrices (ie. vectors)
+    ///
+    /// **Panics** if ``nrows > 1 && ncols > 1``
+    pub fn count_ones(&self) -> u32 {
+        assert!(self.nrows() == 1 || self.ncols() == 1, "only works on single row or single column matrices");
+        let mut accumulator = 0;
+        for row in 0..self.nrows() {
+            let row_ptr: *const *mut Word = unsafe { (*self.mzd.as_ptr()).rows.add(row) };
+            for i in 0..(self.ncols() / 64) {
+                let word_ptr: *const Word = unsafe { (*row_ptr).add(i) };
+                accumulator += unsafe { (*word_ptr).count_ones() };
+            }
+            // process last block
+            if self.ncols() % 64 != 0 {
+                let word_ptr: *const Word = unsafe { (*row_ptr).add((self.ncols() - 1) / 64) };
+                let word = unsafe { *word_ptr } & ((1 << self.ncols() % 64) - 1);
+                accumulator += word.count_ones();
+            }
+        }
+        accumulator
+    }
+
+    /// Construct a randomized matrix
     pub fn random(rows: usize, columns: usize) -> BinMatrix {
         let mzd = unsafe { mzd_init(rows as Rci, columns as Rci) };
         // Randomize
@@ -148,6 +198,7 @@ impl BinMatrix {
         unsafe { BinMatrix { mzd: nonnull!(mzd) } }
     }
 
+    /// Construct a BinMatrix from the raw mzd pointer
     pub fn from_mzd(mzd: *mut Mzd) -> BinMatrix {
         let mzd = ptr::NonNull::new(mzd).expect("Can't be NULL");
         BinMatrix { mzd }
@@ -227,11 +278,6 @@ impl BinMatrix {
         BinMatrix { mzd }
     }
 
-    #[deprecated]
-    pub fn transpose(&self) -> BinMatrix {
-        self.transposed()
-    }
-
     /// Get the number of rows
     ///
     /// O(1)
@@ -248,6 +294,38 @@ impl BinMatrix {
         unsafe { self.mzd.as_ref().ncols as usize }
     }
 
+    /// Get a single word from the matrix at a certain offset
+    pub fn get_word(&self, row: usize, column: usize) -> Word {
+        assert!(row < self.nrows());
+        assert!(column < self.ncols());
+
+        unsafe { self.get_word_unchecked(row, column) }
+    }
+
+    /// Get a particular word from the matrix
+    /// Does not do any bounds checking!
+    #[inline]
+    pub unsafe fn get_word_unchecked(&self, row: usize, column: usize) -> Word {
+        let row_ptr: *const *mut Word = (*self.mzd.as_ptr()).rows.add(row);
+        let word_ptr: *const Word = ((*row_ptr) as *const Word).add(column);
+        *word_ptr
+    }
+
+    /// Get a mutable reference to a particular word in the matrix
+    pub fn get_word_mut(&self, row: usize, column: usize) -> &mut Word {
+        assert!(row < self.nrows());
+        assert!(column < self.ncols());
+        unsafe { self.get_word_mut_unchecked(row, column) }
+    }
+
+    /// Get a mutable reference to a particular word in the matrix without bounds checking.
+    #[inline]
+    pub unsafe fn get_word_mut_unchecked(&self, row: usize, column: usize) -> &mut Word {
+        let row_ptr: *const *mut Word = (*self.mzd.as_ptr()).rows.add(row);
+        let word_ptr: *mut Word = ((*row_ptr) as *mut Word).add(column / 64);
+        word_ptr.as_mut().unwrap()
+    }
+
     /// Get as a vector
     ///
     /// Works both on single-column and single-row matrices
@@ -259,18 +337,16 @@ impl BinMatrix {
             assert_eq!(self.nrows(), 1, "needs to have only one column or row");
             let mut bits = BinVector::with_capacity(self.ncols());
             {
-                let collector: &mut Vec<usize> = unsafe { bits.get_storage_mut() };
+                let collector = unsafe { bits.get_storage_mut() };
                 for i in 0..(self.ncols() / 64) {
                     let row_ptr: *const *mut Word = unsafe { (*self.mzd.as_ptr()).rows };
-                    let word_ptr: *const Word =
-                        unsafe { ((*row_ptr) as *const Word).add(i) };
+                    let word_ptr: *const Word = unsafe { ((*row_ptr) as *const Word).add(i) };
                     collector.push(unsafe { *word_ptr as usize });
                 }
                 // process last block
                 if self.ncols() % 64 != 0 {
                     let row_ptr: *const *mut Word = unsafe { (*self.mzd.as_ptr()).rows };
-                    let word_ptr: *const Word =
-                        unsafe { (*row_ptr).add((self.ncols() - 1) / 64) };
+                    let word_ptr: *const Word = unsafe { (*row_ptr).add((self.ncols() - 1) / 64) };
                     let word = unsafe { *word_ptr };
                     collector.push(word as usize);
                 }
@@ -291,7 +367,7 @@ impl BinMatrix {
         bit == 1
     }
 
-    /// Get a window from the matrix
+    /// Get a window from the matrix. Makes a copy.
     pub fn get_window(
         &self,
         start_row: usize,
@@ -335,6 +411,24 @@ impl BinMatrix {
             }
         }
     }
+
+    /// Multiply a matrix by a vector represented as a [u64]
+    pub fn mul_slice(&self, other: &[u64]) -> BinMatrix {
+        // I've tried to use thread-local storage for the temporary here, but it wasn't faster.
+        debug_assert!(
+            self.ncols() <= other.len() * 64,
+            "Mismatched sizes: ({}x{}) * ({}x1) (too big)",
+            self.nrows(),
+            self.ncols(),
+            other.len() * 64
+        );
+        let result = {
+            let other = BinMatrix::from_slices(&[other], self.ncols()).transposed();
+            unsafe { mzd_mul_naive(ptr::null_mut(), self.mzd.as_ptr(), other.mzd.as_ptr()) }
+        };
+        let matresult = BinMatrix::from_mzd(result);
+        matresult
+    }
 }
 
 impl cmp::PartialEq for BinMatrix {
@@ -355,7 +449,7 @@ impl ops::Mul<BinMatrix> for BinMatrix {
     }
 }
 
-impl clone::Clone for BinMatrix {
+impl std::clone::Clone for BinMatrix {
     fn clone(&self) -> Self {
         let mzd = unsafe { nonnull!(mzd_copy(ptr::null_mut(), self.mzd.as_ptr())) };
         BinMatrix { mzd }
@@ -436,21 +530,14 @@ impl<'a> ops::Mul<&'a BinVector> for &'a BinMatrix {
     /// Computes (A * v^T)
     #[inline]
     fn mul(self, other: &BinVector) -> Self::Output {
-        debug_assert_eq!(
-            self.ncols(),
-            other.len(),
-            "Mismatched sizes: ({}x{}) * ({}x1)",
-            self.nrows(),
-            self.ncols(),
-            other.len()
-        );
-        let other_mat = other.as_matrix();
-        let result_dest = unsafe { mzd_init(self.nrows() as Rci, 1) };
-        let result =
-            unsafe { _mzd_mul_naive(result_dest, self.mzd.as_ptr(), other_mat.mzd.as_ptr(), 0) };
-        let matresult = BinMatrix::from_mzd(result);
-
-        matresult.as_vector()
+        self.mul_slice(
+            &other
+                .get_storage()
+                .iter()
+                .copied()
+                .map(|b| b as u64)
+                .collect::<Vec<u64>>(),
+        ).as_vector()
     }
 }
 
@@ -501,6 +588,7 @@ pub fn solve_left(a: BinMatrix, b: &mut BinMatrix) -> bool {
 #[cfg(test)]
 mod test {
     use super::*;
+    use rand::prelude::*;
     use vob::Vob;
 
     #[test]
@@ -671,5 +759,16 @@ mod test {
         let m1 = BinMatrix::random(100, 100);
         let m2 = BinMatrix::random(100, 100);
         assert_ne!(m1, m2);
+    }
+
+    #[test]
+    fn test_count_ones() {
+        let rng = &mut rand::thread_rng();
+        for _ in 0..1000 {
+            let size = rng.gen_range(1..1000);
+            let v = BinVector::random(size);
+            assert_eq!(v.count_ones(), v.as_matrix().count_ones());
+            assert_eq!(v.count_ones(), v.as_column_matrix().count_ones());
+        }
     }
 }

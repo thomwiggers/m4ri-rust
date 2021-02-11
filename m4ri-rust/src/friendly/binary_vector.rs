@@ -39,21 +39,25 @@ impl ops::DerefMut for BinVector {
 }
 
 impl BinVector {
+    /// Create a new BinVector
     #[inline]
     pub fn new() -> Self {
         BinVector::from(Vob::new())
     }
 
+    //// Construct directly from a vec
     #[inline]
     pub fn from(vec: Vob) -> Self {
         BinVector { vec }
     }
 
+    /// Create with a certain length and all the same element
     #[inline]
     pub fn from_elem(len: usize, elem: bool) -> Self {
         BinVector::from(Vob::from_elem(len, elem))
     }
 
+    /// Set it up from bools
     #[inline]
     pub fn from_bools(bools: &[bool]) -> BinVector {
         let vec = bools.iter().cloned().collect::<Vob>();
@@ -78,6 +82,7 @@ impl BinVector {
         BinVector::from(vob)
     }
 
+    /// Randomized
     #[inline]
     pub fn random(len: usize) -> BinVector {
         let mut rng = rand::thread_rng();
@@ -88,6 +93,7 @@ impl BinVector {
         BinVector::from(vob)
     }
 
+    /// initialise with a set capacity
     #[inline]
     pub fn with_capacity(len: usize) -> Self {
         BinVector::from(Vob::with_capacity(len))
@@ -101,33 +107,31 @@ impl BinVector {
         BinVector { vec }
     }
 
+    /// Get the hamming weight
     #[inline]
     pub fn count_ones(&self) -> u32 {
         self.iter_storage()
             .fold(0u32, |acc, block| acc + block.count_ones())
     }
 
+    /// Extend from a binary vector
     #[inline]
     pub fn extend_from_binvec(&mut self, other: &BinVector) {
         self.vec.extend_from_vob(&other.vec);
     }
 
+    /// Obtain the inner Vob
     #[inline]
     pub fn into_vob(self) -> Vob {
         self.vec
     }
 
-    #[inline]
-    #[deprecated(since="0.3.3", note="use `into_vob` instead")]
-    #[allow(clippy::wrong_self_convention)]
-    pub fn to_vob(self) -> Vob {
-        self.into_vob()
-    }
-
+    /// Obtain this as a row matrix
     pub fn as_matrix(&self) -> BinMatrix {
-        BinMatrix::new(vec![self.clone()])
+        BinMatrix::new(vec![self.clone()] )
     }
 
+    /// Obtain this as a column matrix
     pub fn as_column_matrix(&self) -> BinMatrix {
         self.as_matrix().transposed()
     }
