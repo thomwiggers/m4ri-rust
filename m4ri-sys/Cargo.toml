@@ -6,6 +6,7 @@ edition = "2018"
 description = "Bindings to m4ri"
 repository = "https://github.com/thomwiggers/m4ri-rust"
 license = "GPL-2.0+"
+readme = "../README.md"
 
 [badges]
 travis-ci = { repository = "thomwiggers/m4ri-rust" }
