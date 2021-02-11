@@ -315,6 +315,7 @@ pub unsafe fn mzd_row(matrix: *const Mzd, row: Rci) -> *mut Word {
 /// Create a const window/view into a const matrix
 ///
 /// Note that this function still allocates a new Mzd struct that needs to be dropped.
+/// You **must** call ``mzd_free_window_const``.
 ///
 /// Also, this function copies a bunch of references
 /// As a result, you could get multiple mut references into the same memory.
