@@ -54,7 +54,7 @@ impl BinVector {
     /// Create with a certain length and all the same element
     #[inline]
     pub fn from_elem(len: usize, elem: bool) -> Self {
-        BinVector::from(Vob::from_elem(len, elem))
+        BinVector::from(Vob::from_elem(elem, len))
     }
 
     /// Set it up from bools
@@ -221,7 +221,7 @@ mod test {
 
     #[test]
     fn init() {
-        let b = Vob::from_elem(10, false);
+        let b = Vob::from_elem(false, 10);
         let b = BinVector::from(b);
         assert_eq!(b.len(), 10);
     }
@@ -238,20 +238,20 @@ mod test {
 
     #[test]
     fn add() {
-        let a = BinVector::from(Vob::from_elem(10, false));
-        let b = BinVector::from(Vob::from_elem(10, false));
+        let a = BinVector::from(Vob::from_elem(false, 10));
+        let b = BinVector::from(Vob::from_elem(false, 10));
 
         let c = &a + &b;
 
         assert_eq!(c.len(), 10, "length incorrect");
-        assert_eq!(Vob::from_elem(10, false), *c);
+        assert_eq!(Vob::from_elem(false, 10), *c);
         assert_eq!(c, a + b);
     }
 
     #[test]
     fn mul() {
-        let a = BinVector::from(Vob::from_elem(10, true));
-        let b = BinVector::from(Vob::from_elem(10, false));
+        let a = BinVector::from(Vob::from_elem(true, 10));
+        let b = BinVector::from(Vob::from_elem(false, 10));
 
         let c = &a * &b;
 
